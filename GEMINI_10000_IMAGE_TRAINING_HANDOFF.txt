@@ -1,0 +1,134 @@
+GEMINI HANDOFF: 10,000-IMAGE TRAINING AND REINFORCEMENT LEARNING
+14 November 2026 | Project: I:\icvgip workshop
+
+PURPOSE
+Build and evaluate a single-image AI inpainting detector and localization model
+for a research paper. The inspected image alone is used at inference. Masks and
+original images may be used for supervised training and evaluation when available.
+The user proposes training on 10,000 images, analyzing errors, then investigating
+reinforcement learning (RL). Complete the supervised work first and run the RL
+pilot only after its prerequisites are met. Never invent results or claim SOTA.
+
+EXISTING MATERIAL
+Read FDDM_SUPERFRAME_PAPER_PROGRAM.txt, FDDM_Research_Flow_and_Log.txt, and
+controlled_localization/src/controlled_localization/train_frame.py before changes.
+Existing v2 checkpoint: controlled_localization/runs/super_frame_v2_run/best.pt.
+The previously inspected 100-image set is DEVELOPMENT ONLY, not a fresh final test.
+Its SDXL subset had 10/20 correct; a scoring experiment achieved 11/20, with all
+six edited-image misses remaining. These are small exploratory results.
+
+MUST FIX FIRST
+Current train_frame.py takes a 384x384 crop but preserves the whole-image label.
+A crop from an edited image can contain no annotated edited pixels and still get
+a positive classification target. A read-only simulation with seed 42 and 20 crops
+per positive training image found 4,285/16,200 empty-mask crops; this estimates
+sampling incidence, not the historical training batches. Center-crop validation
+also misses some edits. Treat crop-level labels as local edit-presence labels,
+keep whole-image labels separate, and validate mask provenance. A mask-empty crop
+is background for local supervision, not necessarily a globally pristine image.
+Missing or invalid masks must fail validation rather than silently become zeros.
+
+PHASE 0: INVENTORY AND FREEZE A REPRODUCIBLE PROTOCOL
+[ ] Inspect project instructions, GPU/VRAM, disk, Python environment, existing
+    datasets, licenses, source provenance, image/mask dimensions and code.
+[ ] Report available image counts by label, source, editor, resolution, edit size,
+    and split. Verify masks with overlays and validate alignment and polarity.
+[ ] Treat 10,000 as the target NUMBER OF TRAINING IMAGES, not 10,000 total or
+    10,000 crops. A starting target is 5,000 genuine and 5,000 edited, subject to
+    availability. Count actual unique files and original source identities.
+[ ] Prepare separate source-group-disjoint validation and final test sets. Group
+    each original, its edits and derivatives in one split; check exact hashes and
+    source IDs, inspect near-duplicates and report any unknown provenance.
+    Do not reuse previously inspected development examples as the fresh test.
+[ ] Record dataset manifests, licenses, exclusions, checksums, preprocessing,
+    counts and seeds. Never claim 10,000 if fewer eligible images are available.
+[ ] Maintain two clearly separate protocols: A) SD1.5-only edited training for
+    cross-generator comparison, B) multi-generator training. Do not initialize
+    A from a checkpoint previously trained on held-out generator families.
+    Check all pretraining provenance and document any uncertainty. Do not invent
+    genuine examples for particular generators or force artificial matching.
+
+PHASE 1: CORRECT THE BASELINE
+[ ] Preserve old files/checkpoints. Implement a new configurable data loader.
+    Crop RGB and masks together, use nearest-neighbor for masks, provide verified
+    edit-containing crops, background crops, genuine crops, and whole-image views.
+    For local classification use crop-mask presence, with explicit treatment for
+    ambiguous tiny boundaries; for image classification use the full-image label.
+    Never use masks to select tiles at inference. Ensure transform consistency.
+[ ] Replace center-crop-only validation with whole-image plus overlapping native
+    tiles; aggregate predictions with a documented fixed method. Preserve original
+    pixels where practical; upscaling is not new information.
+[ ] Test crop labels, alignment, missing-mask failures, split grouping, tile
+    coverage, aggregation and checkpoint reload with small deterministic examples.
+[ ] Compare old versus corrected supervision with same eligible data, backbone,
+    initialization, budget, seeds and evaluation. Protocol A must use a compliant
+    checkpoint or train from documented permissible initialization. Protocol B may
+    use the existing v2 checkpoint, with its multi-generator exposure declared.
+    Save config, code revision, data manifest, checkpoint hash, logs and metrics.
+
+PHASE 2: SCALE TO 10,000 IMAGES
+[ ] Acquire eligible high-resolution genuine and edited images with masks from
+    documented sources; respect licenses. Match genuine and edited source and
+    processing as far as available. Report any imbalance or collection shortcut.
+    Preserve quality, but also retain realistic JPEG and resize variants without
+    letting processing reveal the label. Save the exact original preprocessing.
+[ ] Run a small smoke test before a pilot. Train with mixed precision if supported,
+    gradient accumulation or smaller batches as required for the 8 GB GPU; log
+    peak VRAM, runtime, updates and resumed checkpoint state. Use Kaggle only if
+    accessible and document environment and data transfer. Never assume access.
+[ ] Run full 10,000-image training only when data eligibility checks pass. If the
+    target is unavailable, run the largest defensible pilot and report the gap.
+    Use validation for checkpoint and threshold selection, not the final test.
+    Record per-epoch loss and sample counts; do not promise accuracy gains.
+[ ] Save image-level scores, labels, IDs, predictions, masks and heatmaps with
+    metrics. Report accuracy, F1, AUROC, sensitivity, specificity and false
+    positive rate; edited-image IoU and pixel F1; clearly define aggregation and
+    thresholds. Report counts and confidence intervals where feasible.
+
+PHASE 3: DIAGNOSE AND IMPROVE
+[ ] Inspect false positives and false negatives from training/validation only.
+    Break down by generator, edit size, source, resolution, compression and edit
+    type. Save examples and an error report; note small subgroup sample sizes.
+[ ] Mine hard examples from training data only. Add difficult genuine textures,
+    mask-containing tiny edits and background patches. Keep ordinary samples too.
+    Compare against the corrected baseline at matched training and compute budget.
+[ ] Consider supervised original/edit pair ranking only if verified matched pairs
+    are available. Run a same-data no-ranking ablation. Original not required at
+    inference. Keep data availability and pair provenance explicit.
+
+PHASE 4: RL PILOT, AFTER SUPERVISED BASELINE
+[ ] First identify a sequential decision: choose the next image tile to inspect,
+    zoom, or stop, under a fixed maximum number of inspections. State actions,
+    observations, termination and the compute budget. No ground-truth masks or
+    labels may enter the policy observation at inference.
+[ ] Train an RL policy on TRAINING sources only; use labels/masks only to compute
+    training rewards for correct detection/localization, false alarms and cost.
+    Freeze reward, policy choice and threshold using validation only. Specify
+    coefficients and report sensitivity; RL is experimental and may not improve.
+[ ] Compare with the SAME frozen detector and SAME tile/compute budget using grid,
+    random and confidence/uncertainty-guided tile selection; include a supervised
+    learned selector if feasible. Repeat seeds and report accuracy, localization,
+    false alarms, tile count and runtime. Document reward hacking or instability.
+[ ] If prerequisites or resources are unavailable, document the blocker and
+    leave RL pending; do not describe hard-example supervised learning as RL.
+
+PHASE 5: PAPER-QUALITY EVALUATION AND HANDOFF
+[ ] Lock model, threshold and code before evaluating fresh test data. Evaluate
+    once according to the declared plan; keep test results out of training,
+    hyperparameter searches, reward tuning and hard-example mining.
+[ ] Compare with FUSED and other baselines only under matched datasets, source
+    splits, generator exposure, metrics and thresholds; otherwise label the
+    comparison descriptive. FUSED reports 89.5% average detection accuracy in its
+    published setting: https://arxiv.org/html/2608.28302v1 . Do not promise to beat it.
+[ ] Repeat promising experiments across seeds where practical; keep small-sample
+    uncertainty explicit. Research novelty requires prior-work review and ablation.
+[ ] Append a dated factual entry to FDDM_Research_Flow_and_Log.txt with commands,
+    data counts, protocol, outputs, actual results, limitations and next action.
+    Correct or clearly qualify any unsupported earlier SOTA claims in new entries.
+[ ] Deliver a concise report with exact artifact paths, run status, blockers,
+    per-generator confusion counts, saved checkpoints, configurations, code changes,
+    evaluation scripts and instructions for reproduction. No fabricated results.
+
+EXECUTION ORDER: inventory -> split audit -> crop fix -> matched pilot -> acquire
+eligible data -> 10,000-image supervised training -> error analysis -> hard-example
+comparison -> RL pilot with fair baselines -> locked final test -> paper report.

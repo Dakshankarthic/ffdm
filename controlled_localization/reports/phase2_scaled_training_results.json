@@ -1,0 +1,14 @@
+{
+  "timestamp": "2026-11-14 19:45:32 IST",
+  "steps": 250,
+  "train_samples": 2140,
+  "val_samples": 280,
+  "checkpoint": "I:\\icvgip workshop\\controlled_localization\\runs\\scaled_pilot\\best_superframe_v2_scaled.pt",
+  "metrics": {
+    "mean_iou": 25.54,
+    "mean_fp_rate": 17.603,
+    "auroc_hybrid": 59.0,
+    "accuracy": 77.86,
+    "f1": 87.45
+  }
+}

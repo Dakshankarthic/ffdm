@@ -1,0 +1,40 @@
+{
+  "timestamp": "2026-11-14 19:52:44 IST",
+  "seed": 42,
+  "max_budget": 4,
+  "val_samples": 80,
+  "results": {
+    "grid": {
+      "mean_iou": 28.62,
+      "accuracy": 60.0,
+      "f1": 75.0,
+      "auroc": 55.92,
+      "avg_tiles_inspected": 4.0,
+      "latency_ms_per_image": 365.7
+    },
+    "random": {
+      "mean_iou": 27.16,
+      "accuracy": 60.0,
+      "f1": 75.0,
+      "auroc": 54.3,
+      "avg_tiles_inspected": 4.0,
+      "latency_ms_per_image": 358.0
+    },
+    "heuristic": {
+      "mean_iou": 35.8,
+      "accuracy": 60.0,
+      "f1": 75.0,
+      "auroc": 55.47,
+      "avg_tiles_inspected": 4.0,
+      "latency_ms_per_image": 425.9
+    },
+    "rl": {
+      "mean_iou": 21.51,
+      "accuracy": 56.25,
+      "f1": 71.07,
+      "auroc": 52.86,
+      "avg_tiles_inspected": 3.59,
+      "latency_ms_per_image": 315.7
+    }
+  }
+}
