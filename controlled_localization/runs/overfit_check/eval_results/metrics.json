@@ -1,0 +1,36 @@
+{
+  "evaluation_count": 16,
+  "edited_count": 8,
+  "genuine_count": 8,
+  "total_runtime_seconds": 0.8384513000492007,
+  "avg_seconds_per_image": 0.05240320625307504,
+  "detection": {
+    "auroc": 1.0,
+    "average_precision": 1.0,
+    "accuracy": 1.0,
+    "balanced_accuracy": 1.0,
+    "f1": 1.0,
+    "t_image": 0.5
+  },
+  "localization": {
+    "macro_iou": 0.921382592727485,
+    "macro_f1": 0.9590365471018722,
+    "corpus_pixel_ap": 0.9973440614530842,
+    "t_mask": 0.5,
+    "clean_false_positive_pixel_pct": 0.003136528862847222,
+    "by_edit_tier_iou": {
+      "<0.5%": null,
+      "0.5%-2%": 0.921382592727485,
+      "2%-10%": null,
+      ">10%": null,
+      "tiny_(<2%)": 0.921382592727485
+    },
+    "by_edit_tier_f1": {
+      "<0.5%": null,
+      "0.5%-2%": 0.9590365471018722,
+      "2%-10%": null,
+      ">10%": null,
+      "tiny_(<2%)": 0.9590365471018722
+    }
+  }
+}

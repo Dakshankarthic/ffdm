@@ -1,0 +1,8 @@
+{
+  "variant": "T1",
+  "steps": 400,
+  "seed": 42,
+  "tile": 384,
+  "protocol": "v1.2 unpaired within-image degradation; outside loss disabled",
+  "manifest_sha256": "08b7acbb741182a832edebe674231e4f312986aaf56235fca0ac477952610130"
+}

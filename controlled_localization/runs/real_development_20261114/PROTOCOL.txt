@@ -1,0 +1,19 @@
+Real-image development protocol v1.2 — 2026-11-14
+T1 versus T2: same pretrained architecture, seed, sampled images, crops,
+compression recipes and optimizer budget. T2 adds within-image directed KL.
+Unedited/edited photographs need not share a scene. Outside-region loss is
+disabled. This explicitly differs from the original four-view paired design.
+Official OpenSDI hf_datasets.py confirms mean RGB mask >127.5 as positive.
+Viewer-transcoded assets remain a development limitation; this experiment
+does not certify original-byte forensic fidelity or a publication benchmark.
+320 candidate rows from 8 blocks of the official training split. Exclude
+earlier baseline/pilot source IDs, deduplicate image hashes, split source IDs
+by deterministic SHA256 modulo 5 into training and validation. This is not
+a random representative dataset and does not prove near-duplicate exclusion.
+No old test benchmark is used. Validation is development, not final testing.
+Checkpoint selection: maximum validation mean edited-image IoU at 0.5.
+Report detection AUROC and genuine-image positive area separately. Do not
+claim high accuracy until independent unseen-image evaluation supports it.
+Initial budget: 400 optimizer steps per variant, four 384px tiles per update.
+Source license: CC BY-SA 4.0, academic-use notice on official dataset page.
+Mask conversion provenance and downloaded viewer bytes remain on disk.

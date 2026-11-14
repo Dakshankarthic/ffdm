@@ -1,0 +1,12 @@
+{
+  "device": "cuda",
+  "device_name": "NVIDIA GeForce RTX 2070 SUPER",
+  "batch_size": 4,
+  "tile_size": 384,
+  "num_iters": 10,
+  "total_seconds": 0.5940682000946254,
+  "avg_step_seconds": 0.059406820009462534,
+  "avg_tile_seconds": 0.014851705002365633,
+  "peak_vram_allocated_mb": 1248.73779296875,
+  "peak_vram_reserved_mb": 1338.0
+}

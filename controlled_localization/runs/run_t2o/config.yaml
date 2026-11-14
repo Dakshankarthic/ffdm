@@ -1,0 +1,33 @@
+variant: T2O
+seed: 42
+tile_size: 384
+tile_stride: 256
+recipes:
+- identity
+- jpeg_q70
+- jpeg_q85
+- jpeg_q95
+- blur_s05
+model:
+  pretrained_rgb: true
+  weights_name: IMAGENET1K_V1
+  num_processing_classes: null
+  rgb_only: false
+train:
+  steps: 60
+  warmup_steps: 10
+  ramp_steps: 20
+  rgb_lr: 0.0001
+  new_lr: 0.0003
+  weight_decay: 0.0001
+  grad_clip_norm: 1.0
+  use_amp: true
+  groups_per_step: 2
+inference:
+  blending_method: probability
+  pooling_method: top_k
+  pool_k: 2048
+  pool_fraction: 0.01
+  t_mask: 0.5
+  t_image: 0.7075
+  score_direction: higher_is_fake

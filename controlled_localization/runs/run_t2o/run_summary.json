@@ -1,0 +1,12 @@
+{
+  "variant": "T2O",
+  "device": "cuda",
+  "steps_completed": 60,
+  "total_train_runtime_seconds": 34.60472660000005,
+  "final_loss": 0.4149582237005234,
+  "validation_macro_iou": 0.7156361643027518,
+  "validation_pixel_f1": 0.8341792528390931,
+  "detection_auroc": 1.0,
+  "clean_fp_pct": 0.0,
+  "checkpoint_final": "I:\\icvgip workshop\\controlled_localization\\runs\\run_t2o\\checkpoint_final.pt"
+}

@@ -1,0 +1,164 @@
+FDDM PAPER PROGRAM — SUPERFRAME
+14 November 2026 | Workspace: I:\icvgip workshop
+
+1. THE PAPER WE ARE TRYING TO WRITE
+
+Working title: SuperFRAME for Single-Image Detection and Localization of
+Small AI Inpainting Edits
+
+Research question: Does combining a whole-image classifier with supervised
+native-resolution local evidence improve detection of small AI inpainting
+edits on unseen editors while controlling false alarms on genuine images?
+
+One image in. One image-level edit score and one pixel-level heatmap out.
+Training and evaluation can use masks. Inference gets the inspected image alone.
+The paper covers AI inpainting. Claims about attribution versus manual editing
+require separate evidence and a conventional-edit challenge set.
+
+2. STARTING EVIDENCE
+
+SuperFRAME v1 MultiGen and v2 are trained checkpoints. The v2 saved diagnostic
+run has 33.55% edited-image mean IoU, 7.91% tiny-edit IoU on five examples,
+and 0.6432 pooled image AUROC. At a 0.5 threshold on its pooled mask score,
+it classifies all 100 images as edited. Accuracy is 50%. A retrospective
+threshold sweep yields 66% for v2 and 69% for v1 on those same images.
+Use these sweeps solely to diagnose existing score separation.
+
+FUSED reports 89.5% average image accuracy and 88.0% image F1 at 0.5,
+and 44.5% mean localization IoU under its published OpenSDID protocol.
+It trains on SD1.5 only and evaluates five generators. MultiGen SuperFRAME
+uses additional generator families. Store these in separate protocol rows.
+Source: https://arxiv.org/html/2608.28302v1
+
+The old 100-image set is development material. The v2 change combines larger
+backbones and cross-attention, so the current run measures the combined change.
+Keep raw and postprocessed results in separate rows. Use saved score files as
+evidence for any detection result. Genuine-image positive mask area and the
+fraction of genuine images classified positive are different metrics.
+
+3. PROGRAM A — TEST THE EXISTING CHECKPOINTS
+
+WHAT: establish the strongest existing SuperFRAME image decision.
+HOW:
+1. Load v1 MultiGen and v2 checkpoints and record checkpoint hashes.
+2. On identical development examples, save three scores per checkpoint:
+   A. Existing score from the top 2,048 pixels in the merged edit heatmap.
+   B. Trained classification head on a resized whole image.
+   C. Whole-image classification plus evidence pooled from native tiles.
+3. Record resize/padding, tile size, stride and aggregation rule. Test the
+   forward shape on both checkpoints. Include the existing crop-size setting
+   as the first whole-image evaluation configuration.
+4. If using a learned combiner, fit it on development training sources and
+   select it on validation. Save raw logits and probabilities. Freeze the
+   threshold on validation, with one documented policy across generators.
+5. Report accuracy, image F1, AUROC, sensitivity and image-level false-positive
+   rate. Save sample IDs, scores, labels, predictions and confusion counts.
+
+WHY: the existing evaluator scores mask peaks. The model's classification
+head was trained for the image decision and needs its own measurement.
+DONE WHEN: all six checkpoint/score combinations have reproducible outputs
+and we identify which score is worth developing. This is an evaluation repair.
+
+4. PROGRAM B — TRAIN THE IMAGE DECISION
+
+WHAT: train the model using the same views it receives at inference.
+HOW:
+1. Feed a resized whole image plus native-resolution tiles from that image.
+2. Sample some edited tiles using masks during training. Include tiles from
+   an edited image where the mask is empty. Apply the image label to the image
+   prediction and use crop-level targets only when the crop mask supports them.
+3. Mine difficult genuine examples from training sources, such as fabric,
+   foliage and compressed images that scored high under the existing model.
+4. Train a lightweight score combiner with frozen feature backbones first.
+   Retain the existing mask losses when evaluating joint detection/localization.
+5. Run matched comparisons with the same images, initialization and specified
+   training budget. Compare whole-image only, whole image plus tiles, and
+   whole image plus tiles with difficult genuine examples. Log view counts,
+   updates, memory and elapsed time so added computation is visible.
+6. Keep native tile selection independent of masks at inference.
+
+WHY: a crop may miss a tiny edit, while a full-image resize may erase detail.
+Testing both views and genuine lookalikes lets us measure each effect.
+DONE WHEN: saved validation results and repeated runs tell us which component
+improves detection, tiny-edit localization and false positives, if any.
+
+Optional research extension: train with verified original/edit pairs and rank
+an edited patch above its aligned genuine counterpart under identical JPEG
+processing. Compare with exactly the same paired data and no ranking loss.
+Check novelty before calling the loss a contribution. This extension depends
+on verified pairs. The main whole-image/tile study can proceed without them.
+
+5. PROGRAM C — BENCHMARK THE FINAL CANDIDATE
+
+1. Reproduce FUSED's SD1.5-only training condition for the primary comparison.
+   Record training counts, exclusions and source grouping. Keep MultiGen as a
+   separate experiment about exposure to multiple editors.
+2. Use distinct training and validation sources. Check SHA-256, source IDs,
+   and perceptual duplicate candidates. Audit mask semantics and dimensions.
+3. Run FUSED and our selected checkpoint on the same official test examples
+   when the checkpoint and protocol are available. Record any deviation.
+4. Freeze score, threshold, preprocessing and checkpoint before testing.
+   Report a 0.5 result under the matched convention. If using validation
+   calibration, document it and report the calibrated result separately.
+5. Report per-generator image accuracy/F1 and the unweighted mean over five
+   generators. Separately report AUROC, sensitivity at a validation-selected
+   low false-positive operating point, and actual test false-positive counts.
+6. Report edited-image mean IoU and pixel F1. Split by edit size with counts,
+   including <2% and <0.5%. Report genuine-image positive mask area separately.
+7. Include JPEG conditions and held-out sources/editors. Use paired source
+   bootstrap intervals when comparing models on shared images. State whether
+   the difference and its interval support the claim.
+8. Measure parameter count, peak memory and time per image with resolution,
+   device, precision and tile count stated. Compare on common hardware where
+   possible. Include qualitative errors and genuine false positives.
+
+SUCCESS: Claim superiority to FUSED in image accuracy only when a matched
+comparison supports it. A gain limited to tiny edits, low false positives,
+or a compute budget can support a narrower claim if measured on matched data.
+If the method does not improve, report that result and explain what the
+ablation shows. Avoid adapting the method using the final test labels.
+
+6. WRITE THE PAPER IN THIS ORDER
+
+During Programs A and B:
+- Introduction: define local inpainting, tiny edits and false positives.
+  Explain why single-image detection and localization are useful together.
+- Related work: compare MMFusion, FUSED, BCA-IML, GAP-SAM and relevant
+  whole-image/local scoring work. Describe what is established and what the
+  proposed experiment adds. Avoid a first-ever claim based on model wiring.
+- Methods: draw one image into whole-image and native-tile paths. Show which
+  path yields the score and which yields the mask. Specify losses, supervision,
+  preprocessing, tile sampling and how scores are combined.
+- Protocol: document source splits, generator exposure, score definitions,
+  metric aggregation, threshold selection and reproducibility details.
+
+After Program C:
+- Results: use tables directly generated from saved per-image outputs.
+  Table 1 = image accuracy/F1 by generator. Table 2 = localization by edit
+  size and genuine false alarms. Table 3 = ablations and resource costs.
+- Figures: architecture; original inspected input, ground truth and heatmap;
+  comparative successes and failures on the same images; a detection curve
+  with the chosen operating point if it helps interpret false alarms.
+- Discussion: explain observed small-edit misses, generator shift, compression
+  and genuine texture errors. Label causal explanations as hypotheses unless
+  an ablation isolates the cause.
+- Abstract and conclusion: write last. State the actual contribution, the
+  protocol, the measurable effect, and important limitations.
+- Final check: every quantitative claim points to one run and threshold.
+  Reconcile log tables with metrics files. Verify citations and publishable
+  data/model terms, and check the venue's current template and requirements.
+
+7. RECORDS AND IMMEDIATE FIRST TASK
+
+Current log: I:\icvgip workshop\FDDM_Research_Flow_and_Log.txt
+Current model: controlled_localization\src\controlled_localization\models\super_frame_v2_detector.py
+Training: controlled_localization\src\controlled_localization\train_frame.py
+Evaluator: controlled_localization\src\controlled_localization\eval_benchmark_comparison.py
+Current v2 metrics: controlled_localization\reports\super_frame_v2_eval\opensdid_benchmark_metrics.json
+Record code revision, checkpoint hash, data manifest hash, seed, commands,
+selection policy and per-image predictions for each new run.
+
+First coding task: add the three-score evaluation to the existing evaluator
+or a dedicated command using the same manifest loader and inference helpers.
+First paper task: draft the question, methods diagram and evaluation protocol.
+The new classifier and benchmark experiments in this program are planned.

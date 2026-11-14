@@ -1,0 +1,338 @@
+{
+  "date_local": "2026-11-14 Asia/Calcutta",
+  "manifests": [
+    {
+      "path": "I:\\icvgip workshop\\baseline_work\\data_manifests\\test_flux_manifest.json",
+      "records": 20,
+      "labels": {
+        "1": 10,
+        "0": 10
+      },
+      "unique_source_ids": 20,
+      "missing_files": [],
+      "hash_mismatches": [],
+      "mask_formats": {
+        "JPEG": 10
+      },
+      "mask_sizes_mismatched": [],
+      "tiny_edited_assuming_white": 1,
+      "nonbinary_masks": 10,
+      "pairs_original_field_present": 0
+    },
+    {
+      "path": "I:\\icvgip workshop\\baseline_work\\data_manifests\\test_sd15_manifest.json",
+      "records": 20,
+      "labels": {
+        "1": 10,
+        "0": 10
+      },
+      "unique_source_ids": 20,
+      "missing_files": [],
+      "hash_mismatches": [],
+      "mask_formats": {
+        "JPEG": 10
+      },
+      "mask_sizes_mismatched": [],
+      "tiny_edited_assuming_white": 1,
+      "nonbinary_masks": 10,
+      "pairs_original_field_present": 0
+    },
+    {
+      "path": "I:\\icvgip workshop\\baseline_work\\data_manifests\\test_sd2_manifest.json",
+      "records": 20,
+      "labels": {
+        "1": 10,
+        "0": 10
+      },
+      "unique_source_ids": 20,
+      "missing_files": [],
+      "hash_mismatches": [],
+      "mask_formats": {
+        "JPEG": 10
+      },
+      "mask_sizes_mismatched": [],
+      "tiny_edited_assuming_white": 0,
+      "nonbinary_masks": 10,
+      "pairs_original_field_present": 0
+    },
+    {
+      "path": "I:\\icvgip workshop\\baseline_work\\data_manifests\\test_sd3_manifest.json",
+      "records": 20,
+      "labels": {
+        "1": 10,
+        "0": 10
+      },
+      "unique_source_ids": 20,
+      "missing_files": [],
+      "hash_mismatches": [],
+      "mask_formats": {
+        "JPEG": 10
+      },
+      "mask_sizes_mismatched": [],
+      "tiny_edited_assuming_white": 1,
+      "nonbinary_masks": 10,
+      "pairs_original_field_present": 0
+    },
+    {
+      "path": "I:\\icvgip workshop\\baseline_work\\data_manifests\\test_sdxl_manifest.json",
+      "records": 20,
+      "labels": {
+        "1": 10,
+        "0": 10
+      },
+      "unique_source_ids": 20,
+      "missing_files": [],
+      "hash_mismatches": [],
+      "mask_formats": {
+        "JPEG": 10
+      },
+      "mask_sizes_mismatched": [],
+      "tiny_edited_assuming_white": 2,
+      "nonbinary_masks": 10,
+      "pairs_original_field_present": 0
+    },
+    {
+      "path": "I:\\icvgip workshop\\baseline_work\\data_manifests\\val_sd15_manifest.json",
+      "records": 20,
+      "labels": {
+        "1": 10,
+        "0": 10
+      },
+      "unique_source_ids": 20,
+      "missing_files": [],
+      "hash_mismatches": [],
+      "mask_formats": {
+        "JPEG": 10
+      },
+      "mask_sizes_mismatched": [],
+      "tiny_edited_assuming_white": 4,
+      "nonbinary_masks": 10,
+      "pairs_original_field_present": 0
+    },
+    {
+      "path": "I:\\icvgip workshop\\echoseam_research\\pilot_train.json",
+      "records": 16,
+      "labels": {
+        "1": 8,
+        "0": 8
+      },
+      "unique_source_ids": 16,
+      "missing_files": [],
+      "hash_mismatches": [],
+      "mask_formats": {
+        "JPEG": 8
+      },
+      "mask_sizes_mismatched": [],
+      "tiny_edited_assuming_white": 2,
+      "nonbinary_masks": 8,
+      "pairs_original_field_present": 0
+    }
+  ],
+  "errors": [],
+  "cross_manifest_matches": [],
+  "overlap_limit": "Exact hashes and declared IDs only; no proof of source independence or near-duplicate exclusion.",
+  "training_entry_point": {
+    "code_sha256": "dbf9f4e5c9bca33b9d08f87db8880c95441c8753c7b782c8b38d4ce7479ef6cf",
+    "function_line": 239,
+    "argument_load_counts": {
+      "manifest_path": 0,
+      "schedule_path": 0
+    },
+    "fixture_calls": [
+      267
+    ]
+  },
+  "saved_run_summaries": {
+    "t0": {
+      "variant": "T0",
+      "device": "cuda",
+      "steps_completed": 60,
+      "total_train_runtime_seconds": 20.185126699972898,
+      "final_loss": 0.41646286845207214,
+      "validation_macro_iou": 0.7162018843024629,
+      "validation_pixel_f1": 0.8345864417813315,
+      "detection_auroc": 1.0,
+      "clean_fp_pct": 0.0,
+      "checkpoint_final": "I:\\icvgip workshop\\controlled_localization\\runs\\run_t0\\checkpoint_final.pt"
+    },
+    "t1": {
+      "variant": "T1",
+      "device": "cuda",
+      "steps_completed": 60,
+      "total_train_runtime_seconds": 21.967006699997,
+      "final_loss": 0.41487452387809753,
+      "validation_macro_iou": 0.7127149722279293,
+      "validation_pixel_f1": 0.8321904931434629,
+      "detection_auroc": 1.0,
+      "clean_fp_pct": 0.0,
+      "checkpoint_final": "I:\\icvgip workshop\\controlled_localization\\runs\\run_t1\\checkpoint_final.pt"
+    },
+    "t2": {
+      "variant": "T2",
+      "device": "cuda",
+      "steps_completed": 60,
+      "total_train_runtime_seconds": 24.139359299908392,
+      "final_loss": 0.4150318205356598,
+      "validation_macro_iou": 0.7091626604254875,
+      "validation_pixel_f1": 0.8297532159491091,
+      "detection_auroc": 1.0,
+      "clean_fp_pct": 0.0,
+      "checkpoint_final": "I:\\icvgip workshop\\controlled_localization\\runs\\run_t2\\checkpoint_final.pt"
+    },
+    "t2o": {
+      "variant": "T2O",
+      "device": "cuda",
+      "steps_completed": 60,
+      "total_train_runtime_seconds": 34.60472660000005,
+      "final_loss": 0.4149582237005234,
+      "validation_macro_iou": 0.7156361643027518,
+      "validation_pixel_f1": 0.8341792528390931,
+      "detection_auroc": 1.0,
+      "clean_fp_pct": 0.0,
+      "checkpoint_final": "I:\\icvgip workshop\\controlled_localization\\runs\\run_t2o\\checkpoint_final.pt"
+    }
+  },
+  "recomputed_saved_benchmark": {
+    "scope": "Arithmetic from saved CSV, not fresh inference or independent validation of masks/protocol.",
+    "n": 100,
+    "edited": 50,
+    "genuine": 50,
+    "tiny": 5,
+    "auroc": 0.5347999999999999,
+    "mean_edited_iou": 0.04444776041517943,
+    "mean_tiny_iou": 0.057263581391112685,
+    "mean_genuine_flagged_pixel_pct": 4.418300506833701,
+    "genuine_image_positive_fraction": 1.0,
+    "edited_image_positive_fraction": 1.0
+  },
+  "code_evidence": {
+    "train.py": [
+      {
+        "line": 156,
+        "text": "if variant in (\"T2O\", \"T3\") and group_tensors.get(\"outside_eligible\", True):"
+      },
+      {
+        "line": 216,
+        "text": "torch.save(ckpt, temp_path)"
+      },
+      {
+        "line": 242,
+        "text": "manifest_path: Optional[str | Path] = None,"
+      },
+      {
+        "line": 243,
+        "text": "schedule_path: Optional[str | Path] = None,"
+      },
+      {
+        "line": 265,
+        "text": "from .overfit_check import create_overfit_dataset"
+      },
+      {
+        "line": 267,
+        "text": "groups, manifest_records = create_overfit_dataset(dataset_dir, num_groups=8)"
+      },
+      {
+        "line": 387,
+        "text": "eval_metrics = evaluate_dataset(manifest_records, detector, policy, device, eval_dir)"
+      },
+      {
+        "line": 395,
+        "text": "\"validation_macro_iou\": eval_metrics[\"localization\"][\"macro_iou\"],"
+      },
+      {
+        "line": 404,
+        "text": "print(f\"Run {variant} finished in {total_train_sec:.2f}s! Validation Macro IoU: {summary['validation_macro_iou']:.4f}, Det AUROC: {summary['detection_auroc']:.4f}\")"
+      },
+      {
+        "line": 424,
+        "text": "manifest_path=args.manifest,"
+      },
+      {
+        "line": 425,
+        "text": "schedule_path=args.schedule,"
+      }
+    ],
+    "overfit_check.py": [
+      {
+        "line": 43,
+        "text": "base_arr = (rng.rand(384, 384, 3) * 0.7 + 0.15).astype(np.float32)"
+      },
+      {
+        "line": 51,
+        "text": "x0 = rng.randint(40, 290)"
+      },
+      {
+        "line": 52,
+        "text": "y0 = rng.randint(40, 290)"
+      },
+      {
+        "line": 54,
+        "text": "edit_patch = (rng.rand(50, 50, 3) * 0.9 + 0.05).astype(np.float32)"
+      },
+      {
+        "line": 85,
+        "text": "split=\"train\","
+      },
+      {
+        "line": 103,
+        "text": "source_dataset=\"overfit_fixture\","
+      },
+      {
+        "line": 117,
+        "text": "split=\"train\","
+      },
+      {
+        "line": 135,
+        "text": "source_dataset=\"overfit_fixture\","
+      }
+    ],
+    "data/pairs.py": [
+      {
+        "line": 52,
+        "text": "outside_pair_eligible: bool = True,"
+      },
+      {
+        "line": 81,
+        "text": "m_gray = m_gray.resize((w, h), resample=Image.NEAREST)"
+      },
+      {
+        "line": 90,
+        "text": "ign_gray = ign_img.convert(\"L\").resize((w, h), resample=Image.NEAREST)"
+      }
+    ],
+    "eval_benchmark_comparison.py": [
+      {
+        "line": 23,
+        "text": "def bootstrap_ci(values: List[float], n_boot: int = 1000, ci: float = 0.95, seed: int = 42) -> List[float]:"
+      },
+      {
+        "line": 46,
+        "text": "parser.add_argument(\"--baseline-metrics\", type=str, default=\"I:/icvgip workshop/baseline_work/reports/metrics.json\", help=\"VAAS baseline metrics JSON\")"
+      },
+      {
+        "line": 48,
+        "text": "parser.add_argument(\"--t-mask\", type=float, default=0.50, help=\"Localization threshold\")"
+      },
+      {
+        "line": 49,
+        "text": "parser.add_argument(\"--t-image\", type=float, default=0.50, help=\"Image classification threshold\")"
+      },
+      {
+        "line": 201,
+        "text": "\"iou_95_ci\": bootstrap_ci(gen_ious),"
+      },
+      {
+        "line": 203,
+        "text": "\"f1_95_ci\": bootstrap_ci(gen_f1s),"
+      },
+      {
+        "line": 269,
+        "text": "\"localization_iou_95_ci\": bootstrap_ci(all_fake_ious),"
+      },
+      {
+        "line": 271,
+        "text": "\"localization_f1_95_ci\": bootstrap_ci(all_fake_f1s),"
+      }
+    ]
+  }
+}

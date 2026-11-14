@@ -1,0 +1,98 @@
+RESEARCH AND INDEPENDENT IMPLEMENTATION AUDIT — 14 NOVEMBER 2026
+Workspace: I:\icvgip workshop
+
+CONCLUSION
+The current results do not establish a successful AI-edit localizer. The
+implementation contains useful model components, but the research training
+entry point currently always generates synthetic data. Reported synthetic
+training-set metrics must not be described as real-image validation.
+
+IMPLEMENTATION FINDINGS
+1. controlled_localization/src/controlled_localization/train.py lines 239-267:
+run_training_experiment accepts manifest_path and schedule_path but does not
+read either; it calls create_overfit_dataset unconditionally. This is a
+critical blocker for real-data training and controlled comparisons.
+2. overfit_check.py lines 38-57 creates random-noise images and inserts a
+random-noise square. The model fits these examples, not verified AI-edited
+photographs. train.py evaluates the same generated manifest used for training;
+its field named validation_macro_iou is an in-sample synthetic metric.
+3. Checkpoint save does not include RNG state or sampler cursor, and the
+resume loader does not restore those; exact continuation is not established.
+4. data/pairs.py silently resizes mismatched masks. This can hide geometry
+errors: reject such pairs unless a verified transform is explicitly recorded.
+5. canonicalize.py converts image mode to RGB, but does not perform the
+claimed ICC-managed conversion to sRGB. Preserve and inspect color metadata.
+6. Existing automated suite independently rerun: 17 passed in 40.48 seconds.
+It checks useful component contracts but does not establish real-data loading,
+source-disjoint validation, correct resume, or research readiness.
+
+SAVED BENCHMARK: RECOMPUTED FROM EXISTING CSV, NOT A NEW INFERENCE RUN
+100 images, 50 edited, 50 genuine; only 5 tiny edits. Recorded T2O AUROC
+0.5348, mean edited IoU 0.04445, mean tiny IoU 0.05726. Average fraction of
+genuine-image pixels marked positive: 4.4183%. At the reported image
+decision threshold ALL 50 genuine and ALL 50 edited samples were marked
+positive: image-level false-positive rate = 100%, sensitivity = 100%.
+Pixel-area false positives and image-level false positives are different.
+These are exploratory results on already-inspected viewer-derived assets;
+mask polarity/semantics and source independence remain unverified. Tiny-edit
+results from five examples do not substantiate a performance claim. Baseline
+comparisons require matching saved predictions and mask evaluation; do not
+claim superiority from the current summary. Do not reuse this set as a fresh
+unseen final test after inspecting it to develop the model.
+
+DATA AUDIT
+The six baseline manifests contain 120 records total, 20 each; pilot_train
+contains another 16. All image files in these manifests exist and recorded
+image hashes match where provided. Every edited mask inspected is a JPEG
+with values beyond 0 and 255; treating white as edited remains an assumption.
+Each baseline manifest lists 10 positive and 10 negative records; five tiny
+edits in the 100 test-labelled images and four in validation, using >127 as
+the unverified mask threshold. No original-image path is present in the
+inspected manifests. No exact image-hash or declared-source-ID overlap was
+found across these seven manifests. This is not proof against near-duplicate
+scenes, misleading IDs, provenance leakage or pretraining overlap.
+Machine-readable evidence and script: asset_audit.json and audit_saved_assets.py.
+
+NOVELTY ASSESSMENT
+ProCoS already trains manipulation localization with clean/degraded view
+alignment and teacher/student KL; its domain is industrial inspection images
+and it also uses prototype learning. Our proposed method uses a detached view
+of the same model rather than its EMA teacher, and targets small AI edits.
+Those differences alone do not establish a novel contribution.
+https://www.mdpi.com/1424-8220/26/12/3647
+INP-X already studies original-background restoration and training against
+global artifacts: https://arxiv.org/abs/2602.00192
+FUSED already combines forensic and semantic evidence and evaluates artifact
+dependence: https://arxiv.org/abs/2608.28302
+GAP-SAM examines domain alignment and boundary shortcuts:
+https://arxiv.org/abs/2608.20929
+IFA-Net uses reconstruction and iterative refinement:
+https://arxiv.org/abs/2602.18842
+Do not claim clean/degraded consistency, local-global feature fusion, paired
+controls or tiny-region evaluation as independently new. A narrower empirical
+study comparing these mechanisms in a controlled AI-inpainting setting may be
+viable if strong baselines, scale, uncertainty and new evidence justify it.
+
+PRACTICAL DATA DIRECTION
+For T1 versus T2, A->B and C->D consistency only requires an image and its
+processed counterpart; the genuine A and edited C need not be paired with each
+other. This permits a separately documented T1/T2 design on verified unpaired
+genuine and edited images. T2O outside-edit A->C consistency DOES require a
+verified aligned original/edit pair and a trustworthy mask. Change the
+protocol explicitly before comparing this alternative with the earlier design.
+Candidate paired resource: INP-X authors list original, inpainted and exchanged
+images at https://www.kaggle.com/datasets/emirhanbilgic/inpainting-exchange/data
+Check access, licenses, actual mask availability, scene grouping, artifact and
+split provenance before using it. SAGI is another candidate:
+https://mever-team.github.io/SAGI/ . No dataset access or suitability is
+claimed here without inspecting its assets and terms.
+
+NEXT ACTIONS
+1. Gemini fixes actual manifest/schedule ingestion and adds integration tests;
+   synthetic data must require an explicit smoke-test flag.
+2. Establish verified mask semantics and source-separated training/validation
+   data; derive recipe views on the same image without touching the old test set.
+3. Run T1 versus T2 with identical data and budget; compare a credible
+   manipulation-localization baseline. Reserve a new independent final test.
+4. Separate image false-alarm rate from pixel area and preselect thresholds.
+5. Update literature and paper claims after the method and data are verified.

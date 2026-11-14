@@ -1,0 +1,18 @@
+================================================================================
+CONTROLLED LOCALIZATION v1.1 — ENVIRONMENT REPORT
+================================================================================
+Platform: Windows 11 Pro (OS Build 26100.3194, 64-bit)
+Workspace: I:\icvgip workshop\controlled_localization
+Python Interpreter: I:\icvgip workshop\controlled_localization\.venv\Scripts\python.exe (Python 3.12.10)
+Framework: PyTorch 2.6.0+cu124, Torchvision 0.21.0+cu124
+CUDA Hardware: NVIDIA GeForce RTX 2070 SUPER (8192 MiB VRAM)
+CUDA Driver: 610.88 (CUDA Driver 12.8, Runtime 12.4)
+Key Dependencies:
+  - numpy 2.5.4
+  - pillow 13.0.0
+  - pyyaml 6.0.3
+  - scikit-learn 1.9.1
+  - scipy 1.18.1
+  - pytest 9.2.0
+Smoke Test Status: Verified on CUDA (device 0: NVIDIA GeForce RTX 2070 SUPER).
+================================================================================

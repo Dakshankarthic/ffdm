@@ -1,0 +1,191 @@
+Audit Report: controlled_localization_v1
+Scope: audit of the review you pasted, checked claim by claim, plus the exact change to make in each plan section. I did not have the plan itself, so section references follow the review's numbering. Anything I could not verify is marked.
+1. Verdict summary
+#
+Plan section
+Review claim
+Audit verdict
+Priority
+F1
+3.2–3.4
+Stride mismatch (RGB 4/8/16/32 vs forensic 2/4/8/16)
+Confirmed
+Medium
+F2
+3.3
+High-pass stem must be locked
+Confirmed
+High
+F3
+3.2, 6
+model.train() re-enables BatchNorm updates
+Confirmed (+ extension)
+High
+F4
+3.5
+Hann window floor; logit blending
+Window confirmed; logit rationale overstated
+Low
+F5
+3.6
+Top-1% pooling dilutes on high-MP images
+Confirmed, one number wrong
+Medium
+F6
+6
+L1 view-consistency has gradient pathology
+Partly confirmed; fix is right, reasoning needs correction
+Medium
+F7
+6
+T0 vs T2 must see equal tiles per step
+Confirmed; VRAM figure unverified
+High
+F8
+6
+Specify dilation radius for L_outside
+Confirmed; 15–21 px is unsupported, derive it
+Low
+F9
+5
+Double-JPEG / re-encoding asymmetry between A and C
+Confirmed, plus extensions
+Blocker
+F10
+5
+Full-VAE vs paste; no-op edits
+Confirmed, plus extensions
+Blocker
+F11
+9
+Pixel AUPRC memory
+Confirmed; uniform 1,000 bins is weak for tails
+Medium
+F12
+9
+N ≥ 200 genuine for FPR thresholds
+Only valid for 5%; 1% needs ≥ 1,000
+High
+Blockers silently invalidate results (a shortcut the model can exploit). High items corrupt a comparison between T0–T3. Medium and Low items affect quality or reviewer confidence.
+2. Numbers I re-computed
+Item
+Review says
+Correct
+100×100 edit on 720p (1280×720 = 921,600 px)
+1.9% of image
+1.09%; top-1% pool is 9,216 px, so the edit still fills the whole pool (conclusion holds)
+100×100 edit on 12 MP
+0.08%
+0.083%; pool is 120,000 px, so 91.7% of the pool is background (holds)
+45×45 and 64×64 patches
+≈ 2,048 and 4,096 px
+2,025 and 4,096 (holds)
+500 images × 12 MP × 4 B
+> 24 GB
+24 GB (holds)
+8 tiles per microbatch
+2 groups × 4 views
+holds
+5% FPR at N = 200
+"stable enough"
+10 false positives; 95% Wilson CI ≈ 2.7%–8.9%
+1% FPR at N = 200
+implied OK
+2 false positives; 95% Wilson CI ≈ 0.3%–3.6%, not usable
+VRAM 1.8–2.4 GB for 8 tiles
+stated
+Unverified estimate; measure it (see F7)
+3. Findings and the exact change per section
+F1. Decoder stride wiring (Section 3.2–3.4)
+The review is right that only strides 4, 8, 16 have both branches. It does not specify the top-down merge, so specify it:
+• P32 = Conv1x1(RGB_s32) → 64 channels (RGB only).
+• For s in {16, 8, 4}: Ps = Conv3x3( Conv1x1( concat[ proj64(RGB_s), proj64(F_s) ] ) + Up2(P_2s) ).
+• P2 = Conv3x3( concat[ Up2(P4), proj64(F_2) ] ) (forensic-only skip).
+• Head on P2, then bilinear ×2 to full resolution.
+Change: write this table into models/decoder.py docstring and add a unit test asserting tensor shapes at every stride for a 384×384 input.
+F2. Fixed high-pass stem (Section 3.3)
+Confirmed. requires_grad=False works, but a buffer is safer because it can never reach the optimizer.
+Change: register the 9-channel kernel with register_buffer, not nn.Parameter. Test: the stem contributes 0 trainable parameters in T0–T3 and its weights are bit-identical before and after one training epoch.
+F3. BatchNorm freezing (Sections 3.2 and 6)
+Confirmed: requires_grad=False on BN weight and bias does not stop running-stat updates; model.train() puts BN back in training mode. With 8 tiles per step, drifting statistics are a real risk.
+Change:
+• Override train(self, mode=True) in rgb_encoder.py: call super().train(mode), then set every nn.BatchNorm2d to .eval().
+• Test: snapshot running_mean and running_var, run 50 training steps, assert equality.
+• Extension (not in review): the forensic branch and decoder also have normalization. If they are trained from scratch with BN at 8 tiles per step, train and eval behavior will diverge. Decide explicitly: GroupNorm there, or frozen BN. Record the decision in the plan.
+F4. Blending (Section 3.5)
+• Confirmed: a pure Hann window is zero at the edges, so pixels covered by one tile get zero weight and normalization divides by ~0. Use a 2D Hann window with floor 1e-3 and normalize by the accumulated weight sum.
+• Overstated: the claim that probability averaging "pulls confident peaks toward 0.5" is not a defect. Averaging 0.9 and 0.1 gives 0.5 because the tiles disagree. Logit averaging has the opposite weakness: one over-confident tile dominates.
+Change: fix the window as above. Treat probability vs logit blending as a validation-only ablation, choose one rule, and lock it before touching the test split.
+F5. Image-level pooling (Section 3.6)
+Confirmed with the 1.09% correction in section 2.
+Change: validation reports top-fraction pooling (0.1%, 0.5%, 1%, 2%) and fixed-K pooling (K = 2,048 and 4,096; clamp K to the pixel count). Select the primary pooling rule on validation, pre-register it, and report the others as secondary.
+F6. View-consistency loss (Section 6)
+• Right fix: asymmetric teacher-student with a detached clean view (A → B, C → D) is standard and cheap.
+• Reasoning corrections: (a) L1 on probabilities has constant gradient magnitude w.r.t. p; the real problems are non-smoothness at zero and the p(1−p) factor shrinking logit gradients when saturated. (b) "Symmetric KL with stop-gradient" is contradictory; with a detach it is asymmetric. (c) Collapse of the clean prediction is only a risk if supervised loss is absent on those views, so keep per-view supervised loss on all four.
+Change: L_view = Charbonnier(z_deg − sg(z_clean)) on logits, or Bernoulli KL(sg(p_clean) ‖ p_deg). Ramp the weight up over the first epochs. If any recipe resizes or crops, resample predictions and masks to the same grid before comparing.
+Process note: this alters the T2 definition. If v1 was pre-registered, bump to v1.1, log the deviation, and keep symmetric-L1 as a named ablation.
+F7. Compute parity across T0–T3 (Section 6)
+Confirmed. Otherwise a T2 gain may just be 2× more images per step.
+Change:
+• Define one optimizer step as the same number of tile forward passes (8) for every model, drawn by the same seeded sampler.
+• Log tiles seen and source groups seen per run; T2 minus T0 should isolate the consistency loss only.
+• Measure peak VRAM at 8 × 384² with torch.cuda.max_memory_allocated(); do not rely on the 1.8–2.4 GB estimate.
+F8. Boundary ignore zone for L_outside (Section 6)
+The radius should be derived, not guessed.
+Change: r = ceil(max(8, 3·σ_blur_max)) + 4 px in the processed domain (scale by the downscale factor if a recipe resizes). Start at 16 px, then verify on ~100 edits: plot mean |Δ RGB| versus distance outside the mask and set r where it reaches the noise floor. Dilated pixels are ignored in L_outside only, not in the positive loss.
+F9. Re-encoding asymmetry (Section 5), blocker
+Confirmed and the most important item: if A is a camera JPEG and C has an extra decode/encode cycle, the model can classify encoding history instead of edits.
+Change:
+• Decode each source once; write A and C from that same decode as lossless 8-bit PNG; apply the B/D recipes with one pipeline (fixed libjpeg-turbo build, quality, 4:2:0 or 4:4:4, optimize flag, DCT method). Log all of it in the manifest.
+• Extension: if the editor resizes (diffusion models often work at 512 or 1024), apply the identical resize to A, or paste only the edited region back onto the native canvas. Otherwise C carries resampling traces A lacks.
+• Extension: use tile offsets that are multiples of 8 (16 for 4:2:0) and identical across A/B/C/D so the JPEG block grid is consistent.
+• Extension: strip EXIF, ICC and PNG chunks; convert to sRGB consistently.
+• Gate before training: train a trivial classifier (quantization/metadata statistics, simple noise features) to separate A from C using only pixels outside the mask. AUC must be about 0.5; if not, the data build is leaking.
+F10. Compositing mode and no-op edits (Section 5), blocker
+Confirmed, with extensions.
+Change in manifest and audit_data.py:
+• compositing_mode ∈ {pixel_paste, full_vae_decode}.
+• inside_mask_l1_diff, and also outside_mask_l1_diff (extension: quantifies full-VAE leakage and feeds F8).
+• frac_changed_inside = fraction of in-mask pixels with |Δ| > τ (extension: a mean can hide edits that only touch a corner of the mask).
+• status ∈ {ok, quarantined}. Set τ and the pass threshold from the noise-floor distribution on a ~100-edit pilot and pre-register them.
+• Report quarantined counts per editor and recipe, because dropping prompt-ignored edits biases the set toward easy edits.
+• Decision needed: for full_vae_decode, either train on pixel_paste only and evaluate full-VAE as a separate stratum, or composite post hoc (adds a seam). The review leaves this open; pick one and write it down.
+F11. Pixel AUPRC (Section 9)
+Confirmed: 24 GB at 500 × 12 MP.
+Change in metrics.py:
+• Accumulate positive and negative histograms per source group. Uniform bins on [0, 1] resolve the tails badly at ~0.1% edit prevalence, so bin on the logit axis (for example −15 to 15) with 2,000+ bins.
+• Validate against exact AUPRC on a small subset (target |Δ| < 1e-3).
+• Per-group histograms make the source-group bootstrap cheap: resample groups and sum histograms.
+• Report corpus-pooled AUPRC and per-image macro AUPRC, since pooled is dominated by large images.
+F12. FPR thresholds (Section 9)
+Partly confirmed. N ≥ 200 only works for 5% FPR; at 1% it gives 2 false positives.
+Change: rule N_genuine ≥ 10 / target_FPR (200 for 5%, 1,000 for 1%), all from distinct source_ids. Report Clopper-Pearson or Wilson intervals with test FPR, and report FPR per processing recipe, since a threshold set on clean genuine images may behave differently on compressed ones.
+4. Additional gaps the review did not raise
+• Versioning: F6 and F9–F10 change the design. Bump to v1.1, keep pilot_01 (IoU@0.5 = 0.00) tagged as v1, and list deviations.
+• Near-duplicate leakage: splitting by source_id does not stop two IDs showing the same scene. Run perceptual-hash dedup across splits.
+• Determinism: seed Python, NumPy, PyTorch, DataLoader workers and the tile sampler from the manifest; set deterministic cuDNN flags and record library versions.
+• Tile sampling: fix the ratio of edited to unedited tiles and log it per run.
+• Unverifiable here: the cited priors (INP-X, FUSED, GAP-SAM, IFA-Net, TruFor) and the plan's own text. I can check these against sources if you want.
+5. Section scorecard
+Section
+Status after audit
+Required change
+1–2 Scope, prior work
+Ready
+Verify citations; keep overlap table by mechanism
+3 Architecture
+Needs spec
+F1, F2, F3, F4, F5
+5 Data and manifests
+Blocked until fixed
+F9, F10
+6 Losses and training
+Needs refinement
+F6, F7, F8
+9 Evaluation
+Needs implementation rules
+F11, F12
+6. Order of work
+1.  Before P0 (data): F9 canonical lossless pipeline, F10 manifest fields, A-vs-C leakage gate, near-duplicate split check.
+2.  Before P1 (training): F1–F3 with their unit tests, F7 step definition and VRAM measurement, F6 loss and the v1.1 bump, F8 radius calibration.
+3.  Before any test-set run: lock F4 blending and F5 pooling on validation, implement F11 histogram metrics, enforce F12 sample sizes.

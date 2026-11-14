@@ -1,0 +1,101 @@
+{
+  "entries": [
+    {
+      "image_path": "research_data\\opensdi_development_preview\\001000_image.jpg",
+      "mask_path": "research_data\\opensdi_development_preview\\001000_mask.jpg",
+      "label": 1,
+      "source_id": "000148163"
+    },
+    {
+      "image_path": "research_data\\opensdi_development_preview\\011000_image.jpg",
+      "mask_path": "research_data\\opensdi_development_preview\\011000_mask.jpg",
+      "label": 1,
+      "source_id": "003703063"
+    },
+    {
+      "image_path": "research_data\\opensdi_development_preview\\021000_image.jpg",
+      "mask_path": "research_data\\opensdi_development_preview\\021000_mask.jpg",
+      "label": 1,
+      "source_id": "001159835"
+    },
+    {
+      "image_path": "research_data\\opensdi_development_preview\\031000_image.jpg",
+      "mask_path": "research_data\\opensdi_development_preview\\031000_mask.jpg",
+      "label": 1,
+      "source_id": "000142092"
+    },
+    {
+      "image_path": "research_data\\opensdi_development_preview\\041000_image.jpg",
+      "mask_path": "research_data\\opensdi_development_preview\\041000_mask.jpg",
+      "label": 1,
+      "source_id": "000481790"
+    },
+    {
+      "image_path": "research_data\\opensdi_development_preview\\051000_image.jpg",
+      "mask_path": "research_data\\opensdi_development_preview\\051000_mask.jpg",
+      "label": 1,
+      "source_id": "000484131"
+    },
+    {
+      "image_path": "research_data\\opensdi_development_preview\\061000_image.jpg",
+      "mask_path": "research_data\\opensdi_development_preview\\061000_mask.jpg",
+      "label": 1,
+      "source_id": "000997609"
+    },
+    {
+      "image_path": "research_data\\opensdi_development_preview\\071000_image.jpg",
+      "mask_path": "research_data\\opensdi_development_preview\\071000_mask.jpg",
+      "label": 1,
+      "source_id": "000995179"
+    },
+    {
+      "image_path": "research_data\\opensdi_development_preview\\100000_image.jpg",
+      "mask_path": "",
+      "label": 0,
+      "source_id": "000991598"
+    },
+    {
+      "image_path": "research_data\\opensdi_development_preview\\110000_image.jpg",
+      "mask_path": "",
+      "label": 0,
+      "source_id": "003711518"
+    },
+    {
+      "image_path": "research_data\\opensdi_development_preview\\120000_image.jpg",
+      "mask_path": "",
+      "label": 0,
+      "source_id": "003721894"
+    },
+    {
+      "image_path": "research_data\\opensdi_development_preview\\130000_image.jpg",
+      "mask_path": "",
+      "label": 0,
+      "source_id": "003722881"
+    },
+    {
+      "image_path": "research_data\\opensdi_development_preview\\140000_image.jpg",
+      "mask_path": "",
+      "label": 0,
+      "source_id": "003700825"
+    },
+    {
+      "image_path": "research_data\\opensdi_development_preview\\150000_image.jpg",
+      "mask_path": "",
+      "label": 0,
+      "source_id": "001159786"
+    },
+    {
+      "image_path": "research_data\\opensdi_development_preview\\160000_image.jpg",
+      "mask_path": "",
+      "label": 0,
+      "source_id": "003700706"
+    },
+    {
+      "image_path": "research_data\\opensdi_development_preview\\170000_image.jpg",
+      "mask_path": "",
+      "label": 0,
+      "source_id": "001158937"
+    }
+  ],
+  "scope": "OpenSDID viewer development pilot; bright region treated as edit following existing manifest convention"
+}

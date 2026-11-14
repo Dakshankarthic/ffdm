@@ -1,0 +1,1207 @@
+# FDDM — Detection and Localization of Small AI-Edited Objects in Photographs
+
+Project owner: Not separately confirmed for this FDDM record
+Research context: Forensic Detection of Deepfake Media (FDDM), ICVGIP 2026
+Planning record created: 2026-10-31
+Last updated: 2026-10-31, IST (Asia/Calcutta)
+Previous document updates: None — initial version
+Formal project start date: Not separately confirmed
+Current status: Topic selected; five source photographs collected; first AI edit pending
+Implementation status: No detector selected, trained or evaluated
+Next milestone: Produce one controlled small-object AI edit and retain its edit record
+Workspace: C:\Users\DK11\Documents\ChatGPT\icvgip workshop
+
+This is an organized record of the FDDM discussion and an actionable project
+reference. It preserves the reasoning, final decisions, relevant alternatives,
+research sources and current assets. It is not a verbatim chat transcript.
+
+The attached ESP32 robot document supplied the organizational example: overview,
+decision history, architecture, progress, phases, issues, log and continuation
+notes. Its hardware details and instructions do not apply to this project.
+
+Status labels used throughout:
+  CONFIRMED   = explicitly selected or clarified in the discussion.
+  COMPLETED   = a recorded action or artifact actually exists.
+  PROPOSED    = a recommendation awaiting implementation or selection.
+  OPEN        = a choice or fact that has not been established.
+  HISTORICAL  = an earlier idea, retained to explain the project's evolution.
+
+-------------------------------------------------------------------------------
+TABLE OF CONTENTS
+-------------------------------------------------------------------------------
+
+01. Project overview
+02. Final decisions and scope
+03. Discussion flow and evolution of the topic
+04. The Instagram example and perspective explanation
+05. Research gap and novelty boundary
+06. System input, outputs and architecture flow
+07. Training, evaluation and actual-use distinction
+08. Source photographs already collected
+09. First AI-edit experiment
+10. Dataset organization and experiment records
+11. Proposed baseline and development approach
+12. Evaluation plan
+13. Current progress
+14. Main to-do list
+15. Known issues and practical solutions
+16. Project phases and milestones
+17. Full discussion log in chronological order
+18. Software, resources and existing workspace files
+19. Research and workshop reference links
+20. Working conventions for continuing the project
+21. How to continue in another chat
+
+-------------------------------------------------------------------------------
+01. PROJECT OVERVIEW
+-------------------------------------------------------------------------------
+
+Working title:
+  Detection and Localization of Small AI-Edited Objects in Photographs
+
+Short description:
+  Start with an otherwise genuine photograph. A generative AI editor adds,
+  removes or replaces a small object or region. Develop and evaluate a detector
+  that receives the potentially edited image and identifies whether it contains
+  an AI edit and where the suspicious region is located.
+
+Examples:
+  - A small globe is removed from a cabinet in a living-room photograph.
+  - A bottle or bag is added to a park bench.
+  - One small desk object is replaced with another object.
+  - One item in a street-market scene is added, removed or replaced.
+
+Core questions:
+  Q1. Does this image contain evidence of a localized AI edit?
+  Q2. Where is the suspected edited region?
+
+The intended model examines ONE image at inference time. It does not require
+the original photograph as a reference input.
+
+The original photograph and known edit information are useful during dataset
+construction, supervised training and evaluation. They allow the researcher to
+know what was changed and assess the detector's prediction.
+
+Expected research outcome:
+  A reproducible study and a tested improvement on a specific weakness in small
+  AI-edit detection/localization. A trained system, evaluation report or paper
+  is a future deliverable; none exists yet.
+
+-------------------------------------------------------------------------------
+02. FINAL DECISIONS AND SCOPE
+-------------------------------------------------------------------------------
+
+CONFIRMED
+
+  [C1] The project concerns image forensics.
+  [C2] The selected focus is a small AI-edited object/region inside an otherwise
+       real photograph.
+  [C3] Addition, removal and replacement are relevant example edit types.
+  [C4] The desired behavior includes finding the suspicious region, as well as
+       detecting that an image may be edited.
+  [C5] Inference must work from the single image being inspected.
+  [C6] Supplying the original image is not required during actual use.
+  [C7] The user plans to make AI edits using openly licensed source photographs.
+  [C8] The user preferred this partial-edit topic after a temporary suggestion
+       to begin with only a whole-image real-versus-generated classifier.
+  [C9] The present request is to preserve the discussion in a .txt project file
+       organized like the supplied project-reference example.
+
+COMPLETED
+
+  [D1] Five source photographs downloaded from Wikimedia Commons.
+  [D2] Source URLs, authors, licenses, dimensions and file hashes recorded.
+  [D3] The five original JPEGs packaged into open_photo_starter.zip.
+  [D4] Archive integrity checked and downloaded-file hashes verified against
+       the saved manifest.
+
+OPEN / NOT YET SELECTED
+
+  - Final paper title and precise novelty claim.
+  - AI editing tool(s), model versions and generation settings.
+  - Final benchmark, dataset size, object classes and edit-area definition.
+  - Baseline detector and implementation framework.
+  - Model backbone, localization head, losses and training procedure.
+  - Whether the final localization display is a mask, box, heatmap or a
+    combination. Pixel masks are currently the recommended research format.
+  - Compute resources, available GPU memory, budget and schedule.
+  - Numerical decision thresholds and target performance.
+  - Workshop submission requirements, deadline and publication arrangements.
+
+Scope distinction:
+  Fully AI-generated images, partially AI-edited photographs and ordinary
+  photographic processing are different cases. This project currently focuses
+  on the second case. Any expansion should be recorded as a new scope decision.
+
+-------------------------------------------------------------------------------
+03. DISCUSSION FLOW AND EVOLUTION OF THE TOPIC
+-------------------------------------------------------------------------------
+
+Stage A — Workshop and broad research gaps
+
+  The user shared the FDDM workshop link and asked about current research gaps.
+  The discussion considered unfamiliar generators, real-world image/video
+  processing, partial manipulations, reliable confidence and evidence-based
+  explanations. These were candidate research problems, not chosen methods.
+
+Stage B — Image-only detection
+
+  The user clarified an initial goal: determine whether an image is AI-generated.
+  A basic real-photograph-versus-synthetic-image classifier was described as a
+  possible starting point, with the clarification that this binary task is
+  already well studied and does not itself establish research novelty.
+
+Stage C — Instagram reel about geometry
+
+  The user shared a reel from himaniac.tech. Its caption described extending
+  parallel structural edges to look for inconsistent vanishing points. This
+  prompted discussion of geometric consistency as forensic evidence.
+
+Stage D — Correct interpretation and related work
+
+  The geometry explanation was refined: groups of lines parallel in the same
+  3D direction share a vanishing point under perspective projection. Different
+  directions can have different vanishing points. Farid's earlier work and
+  subsequent automated geometry-based methods were identified as prior art.
+
+Stage E — Independent review beyond geometry
+
+  The user explicitly requested suggestions that were not restricted to ideas
+  already discussed. The review compared localized edits, cross-generator
+  generalization, continual adaptation and source attribution/provenance.
+
+Stage F — Small object edits became the preferred direction
+
+  Detection and localization of small AI edits in genuine photos was recommended.
+  When the discussion became confusing, a simpler global-classification pilot
+  was briefly suggested. The user clarified that the small-object-edit method
+  was the preferred topic. That later preference controls the current scope.
+
+Stage G — Original-image clarification
+
+  The user asked whether testing also requires the original. The answer was
+  no: the detector receives only the inspected image. Ground-truth information
+  is retained separately by the evaluator to measure performance.
+
+Stage H — Source-image collection
+
+  The user requested openly licensed images to edit. Five source photographs
+  were collected with attribution and license records. The next practical
+  activity is creating controlled edits, starting with one small object.
+
+Current flow:
+
+  Workshop interest
+       |
+       v
+  AI-generated image detection
+       |
+       v
+  Geometry considered and related work checked
+       |
+       v
+  Broader comparison of research directions
+       |
+       v
+  SELECTED: small AI-object edit detection + localization
+       |
+       v
+  Single-image inference clarified
+       |
+       v
+  Five source photographs collected
+       |
+       v
+  NEXT: create one edit + preserve mask/provenance + inspect the output
+
+-------------------------------------------------------------------------------
+04. THE INSTAGRAM EXAMPLE AND PERSPECTIVE EXPLANATION
+-------------------------------------------------------------------------------
+
+Reel shared by the user:
+  https://www.instagram.com/reel/DfAHPI-yAO7/
+
+Account identified in the user's caption/screenshot:
+  himaniac.tech
+
+What was actually available:
+  - The user-pasted caption.
+  - A screenshot showing railway lines meeting at an orange vanishing point.
+  - The full reel was not viewed. Web loading was throttled and browser access
+    was denied by a saved permission setting. The record must not imply that
+    the complete video or its separate kitchen example was inspected.
+
+Caption's main idea:
+  Perspective errors can expose physically inconsistent image structure.
+
+Correct geometric interpretation:
+  - Under an ideal perspective camera, straight lines parallel in the same
+    world direction project toward a common vanishing point.
+  - A room can have several valid vanishing points for different directions.
+  - A vanishing point may lie outside the visible picture or at infinity.
+  - Two nonparallel image lines usually intersect somewhere. Their intersection
+    alone does not establish consistency. Three or more suitable lines allow
+    a meaningful common-point consistency check.
+  - The difficult step is deciding which observed edges should be parallel in
+    3D; merely detecting straight segments does not solve that problem.
+  - Lens distortion, panorama stitching, unsuitable edge grouping and uncertain
+    measurements can produce apparent errors in genuine photographs.
+  - Correct geometry does not prove that an image is authentic.
+
+Research relevance:
+  Farid explored perspective consistency in 2022. CVPR 2024 work already used
+  lines, perspective fields and object-shadow relationships for detection.
+  ControlVP, WACV 2026, improves perspective consistency in generated images.
+
+Current role in this project:
+  HISTORICAL / OPTIONAL FEATURE. Geometry is not the confirmed main method.
+  It may be evaluated as a complementary signal if experiments justify it.
+
+-------------------------------------------------------------------------------
+05. RESEARCH GAP AND NOVELTY BOUNDARY
+-------------------------------------------------------------------------------
+
+Broad problem:
+  A small manipulated region can be difficult to detect when most of the image
+  remains genuine. The detector should identify evidence relevant to that edit
+  and generalize beyond the particular editor used during training.
+
+Working research question:
+  How can we reliably detect and localize small AI-edited objects when most of
+  the photograph remains unchanged?
+
+More specific candidate question — PROPOSED:
+  Can localization become less dependent on generator processing traces outside
+  the edited region, while retaining useful detection on unfamiliar editors?
+
+Why this candidate is worth investigating:
+  Some editing pipelines reconstruct parts or all of the image through a
+  generative decoder. This may leave detectable traces beyond the intended edit.
+  A detector can partly rely on these traces instead of evidence specific to
+  the changed object or region.
+
+  FUSED (August 2026 preprint) explicitly reports that all methods it evaluated,
+  including its own, partly rely on the global generator artifact. DailyBench
+  (2026 preprint) reports transfer difficulties for modern whole-image synthesis
+  and object-level manipulations. These are literature findings, not results
+  obtained by this project.
+
+Existing work already covers:
+  - Global real-versus-generated image classification.
+  - Partial-manipulation detection and pixel-level localization.
+  - Combining semantic and forensic features.
+  - Cross-generator testing and compression/resize robustness.
+  - Bias-reduced training and confidence calibration.
+  - Geometry-based image forensics.
+  - Continual adaptation to new generators.
+
+What is NOT a sufficient new contribution by itself:
+  - Training a standard classifier and calling the task new.
+  - Adding a heatmap without validating localization.
+  - Combining familiar feature types without showing a specific benefit.
+  - Testing compression or held-out generators without checking prior work.
+  - Repeating the background-restoration experiment already studied by FUSED.
+
+What could become a defensible contribution — PROPOSED:
+  - A measured improvement on small edits across unseen editing models.
+  - A targeted method reducing a documented dependence on unrelated background
+    processing, with a controlled comparison showing why it works.
+  - Better localization at a controlled false-positive rate on genuine photos.
+  - A reproducible dataset/protocol that isolates a distinct, under-tested
+    failure, with evidence that existing methods fail for that reason.
+
+No novelty or workshop-acceptance claim has been established. The selected
+direction is a research problem; its exact contribution must follow focused
+related-work checking and experiments.
+
+-------------------------------------------------------------------------------
+06. SYSTEM INPUT, OUTPUTS AND ARCHITECTURE FLOW
+-------------------------------------------------------------------------------
+
+CONFIRMED INPUT
+  One photograph to inspect, potentially containing a localized AI edit.
+
+DESIRED OUTPUT
+  - An image-level assessment of possible AI manipulation.
+  - A highlighted suspicious region.
+
+PROPOSED SUPPORTING OUTPUTS
+  - A manipulation score, calibrated if presented as confidence.
+  - A pixel-level mask or heatmap.
+  - A short description such as "suspected edited region near the cabinet".
+  - An uncertain result when evidence is insufficient; decision policy is open.
+
+Single-image inference flow — PROPOSED IMPLEMENTATION:
+
+  Inspected image
+       |
+       v
+  Documented preprocessing
+       |
+       v
+  Pretrained feature extractor / existing forensic model
+       |
+       +--------------------------+
+       |                          |
+       v                          v
+  Image-level score          Regional/pixel-level scores
+       |                          |
+       v                          v
+  Detection decision         Suspected edit mask / heatmap
+       |                          |
+       +------------+-------------+
+                    |
+                    v
+  Report: possible edit, highlighted region, score and relevant uncertainty
+
+This is a conceptual architecture. No encoder, classifier, segmentation head,
+fusion module or training loss has been selected or implemented.
+
+Meaning of "what changed":
+  The intended detector identifies WHERE an image appears to have been edited.
+  It may describe the visible object or suspicious area. With only the final
+  image, it generally cannot reliably recover the exact earlier object or prove
+  the complete editing history.
+
+Example:
+  Original: cup on a table.
+  Edited: bottle in that position.
+  Single-image detector: can aim to highlight the bottle region as suspicious.
+  Original-versus-edited comparison: can establish cup-to-bottle replacement.
+
+Recovering a precise before/after change is a separate reference-comparison
+task, not a requirement of the chosen single-image detector.
+
+-------------------------------------------------------------------------------
+07. TRAINING, EVALUATION AND ACTUAL-USE DISTINCTION
+-------------------------------------------------------------------------------
+
+DATA CONSTRUCTION
+  The researcher retains the original, creates the edit, records the intended
+  mask and editing procedure, and verifies the resulting labels.
+
+SUPERVISED TRAINING — PROPOSED
+  Typical inputs/targets: genuine and edited images, image labels and edit masks.
+  Originals can help construct paired data and controlled experiments. An
+  original reference is not inherently required as a second model input.
+
+EVALUATION
+  The detector receives one held-out image.
+  A separate evaluator uses its hidden label/mask to score the predictions.
+  Ground truth must not be supplied to the detector as an inference input.
+
+ACTUAL USE
+  The user supplies only the photograph to inspect.
+  The detector produces the image assessment and suspicious-region prediction.
+
+Comparison:
+
+  Stage              Model sees                     Researcher/evaluator keeps
+  -----------------  -----------------------------  ---------------------------
+  Training           Training image                 Label/mask for supervision
+  Held-out testing   One test image                  Hidden true label/mask
+  Actual use         One unknown image               Original usually unavailable
+
+Mask convention — PROPOSED:
+  White / 255: intended edited region.
+  Black / 0: region outside the intended edit.
+
+Important distinction:
+  A requested edit mask is not automatically an exact map of all pixels the
+  editor modified. Some editors resize, recompress, regenerate or alter areas
+  outside the selection. Record both the requested selection and the observed
+  editing behavior. Define whether the ground truth represents the requested
+  semantic edit, generator-processed pixels or another precisely stated target.
+
+-------------------------------------------------------------------------------
+08. SOURCE PHOTOGRAPHS ALREADY COLLECTED
+-------------------------------------------------------------------------------
+
+Folder:
+  C:\Users\DK11\Documents\ChatGPT\icvgip workshop\open_photo_starter
+
+Archive:
+  C:\Users\DK11\Documents\ChatGPT\icvgip workshop\open_photo_starter.zip
+  Size at creation: 29,406,113 bytes (approximately 29 MB)
+
+01 — KITCHEN
+  File: 01_kitchen.jpg
+  Title: Restaurant kitchen
+  Author: Raysonho @ Open Grid Scheduler / Grid Engine
+  Date reported by source: 2015-11-27
+  Dimensions: 4928 x 3264
+  License: CC0 1.0
+  Source: https://commons.wikimedia.org/wiki/File:RestaurantKitchen.jpg
+  License: https://creativecommons.org/publicdomain/zero/1.0/
+  Suggested edit: add or replace one small object.
+
+02 — LIVING ROOM
+  File: 02_living_room.jpg
+  Title: Living room in Victoria, Australia
+  Author: Tim Collins
+  Date reported by source: 2010-09-21
+  Dimensions: 3600 x 2399
+  License: CC BY-SA 3.0
+  Source: https://commons.wikimedia.org/wiki/File:Living_Room.jpg
+  License: https://creativecommons.org/licenses/by-sa/3.0/
+  Suggested first edit: remove the small globe and stand from the cabinet.
+
+03 — PARK BENCH
+  File: 03_park_bench.jpg
+  Author: FelpMan
+  Date reported by source: October 2008
+  Dimensions: 1290 x 846
+  License: Public domain, released by the author
+  Source: https://commons.wikimedia.org/wiki/File:ParkBench.jpg
+  Suggested edit: add a small bottle or bag on the bench.
+
+04 — OFFICE DESK
+  File: 04_office_desk.jpg
+  Title: Items on a Wikipedian's office desk
+  Author: Shinealight
+  Date reported by source: 2006-04-03
+  Dimensions: 3456 x 2304
+  License: Public domain, released by the author
+  Source: https://commons.wikimedia.org/wiki/File:Items_on_a_Wikipedian%27s_office_desk_-_20060403.jpg
+  Suggested edit: replace or remove one small desk item.
+
+05 — STREET MARKET
+  File: 05_street_market.jpg
+  Title: Street market in Hanoi, Vietnam
+  Author: Daderot
+  Date reported by source: 2014-08-03
+  Dimensions: 4842 x 3262
+  License: CC0 1.0
+  Source: https://commons.wikimedia.org/wiki/File:Street_market_-_Hanoi,_Vietnam_-_DSC03457.JPG
+  License: https://creativecommons.org/publicdomain/zero/1.0/
+  Suggested edit: add, remove or replace one small market item.
+
+Credits and provenance:
+  README.md contains source credits, licenses and experiment guidance.
+  sources.json contains direct original URLs, dimensions, byte counts and
+  SHA-256 hashes for all five downloaded files.
+
+The JPEGs were saved as downloaded, without resizing, cropping, recompression
+or AI editing by this collection process. Source records support using them
+as pilot photographs; they do not certify the absence of earlier conventional
+photographic adjustments.
+
+Reuse note:
+  The living-room photograph requires attribution, a license link, identification
+  of changes and the same or a compatible share-alike license for distributed
+  adaptations. Do not label the entire set CC0. The other four photographs have
+  CC0 or author public-domain releases. Retain the source records.
+
+Dataset status:
+  These five photographs are a starter set for learning the editing and
+  annotation workflow. They are not a sufficiently diverse training dataset
+  or a benchmark from which to claim general detector accuracy.
+
+-------------------------------------------------------------------------------
+09. FIRST AI-EDIT EXPERIMENT
+-------------------------------------------------------------------------------
+
+Status: PROPOSED / NOT YET PERFORMED
+
+Recommended source:
+  open_photo_starter\02_living_room.jpg
+
+Recommended edit:
+  Remove the small globe and its stand from the cabinet near the middle of the
+  scene. This is a localized object-removal example.
+
+Suggested prompt:
+  "Remove the small globe and its stand from the cabinet. Fill the selected
+   area naturally. Preserve everything outside the selection and keep the
+   original image dimensions."
+
+Procedure:
+  1. Keep the downloaded original unchanged.
+  2. Select an AI editor that supports masked/local editing if available.
+     Tool selection is still open; the user planned to generate the edit.
+  3. Save the intended selection mask before submitting the edit.
+  4. Include the object, stand and any directly affected shadow in the selection.
+  5. Run the localized edit and save the resulting image separately.
+  6. Record editor/model/version, prompt, settings, seed if available, date,
+     dimensions and output format.
+  7. Inspect whether the object was removed and whether unrelated areas changed.
+  8. Preserve output files even if the example fails; label the outcome clearly.
+  9. Confirm the annotation target before using the example as ground truth.
+
+Proposed filenames for this example:
+  02_living_room__remove_globe__v01.png
+  02_living_room__remove_globe__v01__mask.png
+  02_living_room__remove_globe__v01__record.json
+
+These filenames describe planned artifacts. The edited image, mask and record
+have not yet been created in this project.
+
+Useful follow-up edits after the first example is verified:
+  - Addition: insert one small object on the bench.
+  - Replacement: change one small desk item.
+  - Removal: remove one small market item.
+
+There is no confirmed final number of edits or object categories.
+
+-------------------------------------------------------------------------------
+10. DATASET ORGANIZATION AND EXPERIMENT RECORDS
+-------------------------------------------------------------------------------
+
+Existing files:
+
+  icvgip workshop\
+    FDDM_Project_Reference.txt     This reference file
+    open_photo_starter.zip        Five photographs + README + source manifest
+    open_photo_starter\
+      01_kitchen.jpg
+      02_living_room.jpg
+      03_park_bench.jpg
+      04_office_desk.jpg
+      05_street_market.jpg
+      README.md
+      sources.json
+    tmp\
+      collect_starter_photos.py    Source-photo collection/packaging script
+
+Suggested future dataset layout — NOT YET CREATED:
+
+  data\
+    originals\                    Preserved source photographs
+    edited\                       AI-edited outputs
+    requested_masks\              User-selected edit masks
+    verified_annotations\         Reviewed labels/masks with defined semantics
+    records\                      Per-edit metadata/provenance
+    splits\                       Source-grouped train/validation/test lists
+  experiments\
+    baseline\
+    proposed_method\
+  results\
+    metrics\
+    visualizations\
+    failure_cases\
+
+Minimum record for each edit — PROPOSED SCHEMA:
+  sample_id
+  source_id
+  original_file
+  edited_file
+  requested_mask_file
+  verified_annotation_file (if available)
+  annotation_definition
+  edit_type: addition / removal / replacement
+  target_object_or_region
+  prompt
+  editor_name
+  model_or_version
+  seed (if available)
+  settings
+  date_created
+  image_dimensions
+  output_format
+  postprocessing_steps
+  requested_edit_area_percent
+  outside_selection_changes: yes / no / unknown
+  quality_review_status
+  source_url
+  author_and_license
+  split_group_id
+
+Suggested area calculation:
+  edited_area_percent = 100 * mask_pixels / total_image_pixels
+
+Record whether this area comes from the requested mask or a verified mask.
+
+Critical split rule:
+  An original photo and ALL its edited, cropped, resized and compressed variants
+  belong to the SAME split group. Split by source image before making train,
+  validation and test sets. This prevents source-content leakage.
+
+Unseen-editor evaluation — PROPOSED:
+  Hold out entire editing models where data allow. State precisely whether the
+  test editor, model family or merely a particular version was absent during
+  training. These are different levels of generalization.
+
+-------------------------------------------------------------------------------
+11. PROPOSED BASELINE AND DEVELOPMENT APPROACH
+-------------------------------------------------------------------------------
+
+No final method has been selected. Begin with released code and checkpoints
+where feasible, then establish which failure the project will improve.
+
+Relevant baseline candidates:
+  - DeCLIP: a published approach for localizing generated image modifications.
+  - FUSED: a recent joint inpainting detection/localization approach.
+  - DiffusionPrint: forensic features intended to improve inpainting localization.
+  - A global image detector: useful as a comparison showing how whole-image
+    detection differs from regional localization.
+
+These candidates were identified from research. They have not been installed,
+run or ranked on this project's images. Check code availability, model/data
+licenses, dependencies and compute requirements before selecting one.
+
+Suggested sequence:
+  A. Create and inspect the first controlled edited sample.
+  B. Select an existing annotated manipulation benchmark for meaningful testing.
+  C. Run a released baseline on genuine and edited examples.
+  D. Examine failures, especially small edit regions.
+  E. Select one testable failure mechanism.
+  F. Propose one targeted method or training intervention.
+  G. Compare it with baseline and simple alternatives using the same data.
+
+Potential failure mechanisms to inspect, not established project findings:
+  - Local evidence overwhelmed by the authentic background.
+  - Reliance on global generator reconstruction artifacts.
+  - Performance loss on an unfamiliar editor.
+  - Poor localization after compression or resizing.
+  - False alarms caused by genuine photographic processing.
+
+Potential experiment on background artifacts — PROPOSED:
+  Compare a generator's output with a controlled version retaining original
+  pixels outside the edit region. Keep edit content fixed as far as possible.
+  Examine both detection and localization. Check compositing boundaries and
+  annotation definitions to avoid introducing new shortcuts.
+
+This experiment is already present in related work. A contribution would need
+to explain and reduce a remaining weakness, or extend evaluation in a clearly
+distinct and justified way.
+
+-------------------------------------------------------------------------------
+12. EVALUATION PLAN
+-------------------------------------------------------------------------------
+
+Status: PROPOSED. No numerical results or targets have been measured.
+
+Two tasks must be assessed separately:
+
+  IMAGE-LEVEL DETECTION
+    Does the system distinguish genuine photos from photos with local AI edits?
+
+  REGION-LEVEL LOCALIZATION
+    How well does its predicted suspicious region match the defined edit mask?
+
+Candidate detection measures:
+  - AUROC: separation across decision thresholds.
+  - Precision/recall: behavior at a selected operational threshold.
+  - False-positive rate on genuine photos.
+  - Recall at a preset false-positive rate.
+
+Candidate localization measures:
+  - Intersection-over-Union (IoU).
+  - Pixel-level F1/Dice.
+  - Per-image mask quality and qualitative overlays.
+
+Choose thresholds using training/validation information, not hidden test labels.
+State the thresholding and mask-postprocessing rules before reporting results.
+
+Suggested result breakdowns:
+  - Small versus larger edited regions, using documented area bins.
+  - Addition versus removal versus replacement.
+  - Known versus held-out editing model.
+  - Untouched outputs versus defined compression/resize conditions.
+  - Genuine-photo source/camera collections where available.
+
+Useful controls:
+  - Genuine images processed through equivalent export/compression steps.
+  - Equal preprocessing policies for genuine and manipulated images.
+  - Source-grouped splits with no near-duplicate leakage.
+  - A simple baseline and ablation isolating each proposed intervention.
+  - Confidence intervals when sample counts support meaningful estimates.
+
+Fair comparison:
+  Record training data, test data, checkpoint/version, compute, preprocessing,
+  image sizes and thresholds. Mark any result taken from a paper separately
+  from results reproduced in this workspace.
+
+Claims to avoid:
+  - "100% accurate" without a carefully defined and adequate test population.
+  - Treating five demonstrations as evidence of general performance.
+  - Calling an uncalibrated model score a proven probability of manipulation.
+  - Claiming that a heatmap reconstructs the exact original image.
+
+-------------------------------------------------------------------------------
+13. CURRENT PROGRESS
+-------------------------------------------------------------------------------
+
+COMPLETED
+  [x] FDDM research interest recorded.
+  [x] Initial image-detection objective clarified.
+  [x] Geometry/perspective cue discussed and its limitations explained.
+  [x] Broader research directions reviewed beyond the Instagram idea.
+  [x] User preference for small AI-object edits confirmed.
+  [x] Single-image inference requirement clarified.
+  [x] Five source photographs collected.
+  [x] Source authors, licenses, dimensions and hashes saved.
+  [x] Starter ZIP created and checked.
+  [x] Discussion organized into this project-reference file.
+
+PENDING
+  [ ] Select AI editor and record its version.
+  [ ] Generate first small-object edit.
+  [ ] Save requested edit mask and generation record.
+  [ ] Inspect changes outside the selected area.
+  [ ] Establish verified annotation semantics.
+  [ ] Select a larger annotated dataset/benchmark.
+  [ ] Select and run an existing detector/localizer.
+  [ ] Establish baseline metrics and recurring failures.
+  [ ] Finalize specific contribution after a focused novelty check.
+  [ ] Implement and evaluate the proposed improvement.
+  [ ] Prepare paper/report materials if submission is pursued.
+
+No AI-edited outputs, trained checkpoints, baseline predictions or experimental
+metrics have been reported or produced in the recorded project work so far.
+
+-------------------------------------------------------------------------------
+14. MAIN TO-DO LIST
+-------------------------------------------------------------------------------
+
+IMMEDIATE NEXT ACTION
+  [ ] Make the living-room globe-removal example, preserving original, selected
+      mask, edited output and editor details.
+
+AFTER THE FIRST EDIT
+  [ ] Review dimensions, alignment and outside-mask changes.
+  [ ] Add a small object-addition and object-replacement example.
+  [ ] Confirm which annotations can support quantitative evaluation.
+
+BEFORE MODEL DEVELOPMENT
+  [ ] Record available compute resources.
+  [ ] Select existing benchmark data with usable masks and terms of reuse.
+  [ ] Choose one released localization baseline.
+  [ ] Prepare source-grouped train/validation/test splits where appropriate.
+  [ ] Run baseline inference before deciding on an architectural change.
+
+BEFORE CLAIMING A RESEARCH CONTRIBUTION
+  [ ] Identify a reproducible failure, with sufficient examples.
+  [ ] Check recent related work addressing the same failure.
+  [ ] Define a specific intervention and a falsifiable expected benefit.
+  [ ] Compare against simple alternatives under identical conditions.
+  [ ] Record detection, localization and genuine-photo false alarms.
+
+BEFORE SUBMISSION
+  [ ] Recheck the FDDM call and actual submission requirements.
+  [ ] Confirm deadline, formatting, review and publication arrangements.
+  [ ] Verify citations, asset licenses and release permissions.
+  [ ] Prepare reproducible settings, limitations and failure examples.
+
+-------------------------------------------------------------------------------
+15. KNOWN ISSUES AND PRACTICAL SOLUTIONS
+-------------------------------------------------------------------------------
+
+Issue 1 — Too many candidate directions caused confusion.
+  Record: Broad real/fake detection, geometry, generalization, calibration and
+          partial-edit localization were all considered.
+  Resolution: The user's later preference selects small-object-edit detection
+              and localization. Preserve that decision unless the user changes it.
+
+Issue 2 — Uncertainty over whether an original is required at test time.
+  Resolution: One inspected image is the model input. Ground truth remains
+              separate for evaluation. Original-comparison tasks are separate.
+
+Issue 3 — Requested mask may not describe every changed pixel.
+  Proposed response: Save the selection, preserve editor settings, inspect the
+                     full output and explicitly define the annotation target.
+
+Issue 4 — Entire-image export traces may become a shortcut.
+  Proposed response: Include matched genuine-photo controls and controlled
+                     artifact comparisons. Inspect source and processing bias.
+
+Issue 5 — Very small edits may be lost when images are resized.
+  Proposed response: Record original/processed dimensions and edited area;
+                     evaluate resolution and patch-handling choices explicitly.
+
+Issue 6 — Five photographs are too few for general research conclusions.
+  Proposed response: Use them for the editing workflow, then select larger
+                     public data and a held-out evaluation set.
+
+Issue 7 — Topic already has substantial prior work.
+  Proposed response: Compare against published localization approaches and
+                     target a particular remaining failure. Do not claim the
+                     task or the background-artifact test itself is new.
+
+Issue 8 — Detector may highlight a region without knowing its original content.
+  Resolution: State the output as suspicious-region localization. Exact
+              before/after reconstruction needs additional evidence.
+
+Issue 9 — Source-image variants may leak across splits.
+  Proposed response: Group all variants by original source before splitting.
+
+Issue 10 — License differences within the starter set.
+  Resolution: Retain individual credits. Living room is CC BY-SA 3.0; other
+              images are CC0 or author-released public domain.
+
+Issue 11 — Instagram and workshop details were not fully accessible.
+  Resolution: Record actual evidence: pasted caption/screenshot for the reel;
+              official conference listing for the workshop. Submission details
+              remain unconfirmed.
+
+-------------------------------------------------------------------------------
+16. PROJECT PHASES AND MILESTONES
+-------------------------------------------------------------------------------
+
+Phase 1 — Problem framing and source-photo collection
+  Status: COMPLETED for the initial planning/starter-asset milestone, 2026-10-31.
+  Evidence: selected scope, five JPEGs, README, manifest and verified ZIP.
+
+Phase 2 — Controlled AI edits and annotation workflow
+  Status: NEXT / PENDING.
+  Milestone: one reviewed edit with source, output, mask and provenance record.
+  Follow-up: demonstrate addition, removal and replacement examples.
+
+Phase 3 — Existing benchmark and baseline evaluation
+  Status: PENDING.
+  Milestone: selected dataset, baseline outputs, defined metrics and error review.
+
+Phase 4 — Contribution design and implementation
+  Status: PENDING; method not selected.
+  Milestone: a targeted intervention supported by baseline failure evidence.
+
+Phase 5 — Controlled comparative evaluation
+  Status: PENDING.
+  Milestone: detection/localization comparisons, ablations and false-alarm review.
+
+Phase 6 — Documentation and potential workshop submission
+  Status: PENDING; no submission commitment or acceptance recorded.
+  Milestone: verified requirements, reproducible report/paper and supporting data.
+
+No fixed duration has been agreed for any pending phase. Do not infer a schedule
+from the conference date alone.
+
+-------------------------------------------------------------------------------
+17. FULL DISCUSSION LOG IN CHRONOLOGICAL ORDER
+-------------------------------------------------------------------------------
+
+All entries below are ordered by the conversation on 2026-10-31. Exact message
+times were not recorded in this reference; sequence numbers preserve order
+without inventing historical timestamps.
+
+01 | Workshop question
+   User shared the FDDM website and asked about current research gaps.
+   Broad detection, transfer, partial manipulation and reliability issues reviewed.
+
+02 | Workshop access and official listing
+   The workshop website could not be fetched. Official ICVGIP information listed
+   FDDM as a full-day workshop on 21 December 2026. Submission details unverified.
+
+03 | Initial image-only goal
+   User said the plan was to identify whether an image was AI-generated.
+   Basic binary image detection and the need for a specific contribution discussed.
+
+04 | First candidate research framing
+   Unseen-generator robustness, image degradation and genuine-photo false alarms
+   proposed as possible angles. These were suggestions, not final commitments.
+
+05 | Instagram reel shared
+   User provided the reel link. Web fetch was throttled. Browser access was
+   declined; subsequent retry reported a saved permission block. Reel not viewed.
+
+06 | Caption supplied by user
+   Caption described checking kitchen edges for a consistent vanishing point,
+   attributed the idea to Hany Farid and noted that passing the test is not proof.
+
+07 | Geometry assessed
+   Perspective analysis recognized as useful conditional evidence. Corrected the
+   implication that all lines in a room share a single vanishing point.
+
+08 | Prior geometry research identified
+   Farid 2022, CVPR 2024 geometry detectors and ControlVP WACV 2026 discussed.
+   Automated vanishing-point checking alone was not presented as new research.
+
+09 | Railway screenshot supplied
+   User attached the reel screenshot showing blue railway lines meeting at an
+   orange point. Explained common direction groups and why two lines are not
+   enough for a meaningful multi-line consistency assessment.
+
+10 | Request for independent suggestions
+   User asked not to limit suggestions to the preceding chat. Broader approaches
+   reviewed, including partial edits, generalization, continual adaptation and
+   source attribution/provenance.
+
+11 | Partial-edit recommendation
+   Suggested detecting/localizing small edits in otherwise genuine photographs.
+   Global-generator-artifact dependence discussed as a specific candidate failure.
+
+12 | User expressed decision difficulty
+   A simple whole-image baseline was briefly suggested as a way to begin.
+   This was a temporary recommendation, not the eventual selected scope.
+
+13 | User selected the small-object-edit idea
+   User clarified that detecting a small changed object was the preferred topic.
+   Working title adopted: Detection and Localization of Small AI-Edited Objects
+   in Photographs. Detection/localization distinction explained.
+
+14 | Exact change versus suspected region
+   Clarified that identifying a suspicious region from one image is different
+   from knowing exactly what existed before the edit.
+
+15 | Original-image requirement at testing
+   User asked whether the original must also be provided for testing.
+   Clarified single-image inference and separate hidden ground-truth evaluation.
+
+16 | User requested source images
+   User requested openly licensed images online and planned to generate AI edits.
+   Five camera-photo sources selected from Wikimedia Commons with reuse records.
+
+17 | Starter assets created
+   Downloaded kitchen, living room, bench, office desk and street market photos.
+   Saved original JPEGs, credits, license URLs, dimensions and hashes. Packaged
+   five photographs plus two metadata/readme files in open_photo_starter.zip.
+
+18 | Starter assets verified
+   Confirmed ZIP integrity and that all five files matched their recorded hashes.
+   These checks verify the collected files/archive, not detector performance.
+
+19 | First edit suggested
+   Recommended removing the small globe and stand from the living-room cabinet.
+   Suggested retaining the original, selection mask and edited image separately.
+   No edit was generated in the recorded work.
+
+20 | Project-reference request
+   User attached an ESP32 robot project reference as a formatting example and
+   requested the complete FDDM discussion as an organized .txt file.
+   This file records that discussion, current state and proposed next actions.
+
+-------------------------------------------------------------------------------
+18. SOFTWARE, RESOURCES AND EXISTING WORKSPACE FILES
+-------------------------------------------------------------------------------
+
+Collection script:
+  C:\Users\DK11\Documents\ChatGPT\icvgip workshop\tmp\collect_starter_photos.py
+
+Libraries used by that script:
+  - requests: fetching public source pages and original image files.
+  - beautifulsoup4: finding the original-image link on Commons file pages.
+  - Pillow: checking downloaded image readability and dimensions.
+  - Standard library: pathlib, hashlib, json, zipfile and time.
+
+These describe the asset-collection utility only. They do not establish a
+detector software stack. Python/PyTorch and pretrained models are possible
+implementation choices; no detector environment has been configured.
+
+Resource facts still open:
+  Available GPU, GPU memory, training environment, time budget and paid API access.
+
+Verified asset inventory:
+  Five JPEG images, README.md, sources.json and one ZIP archive.
+  The ZIP contains seven files: five JPEGs plus README.md and sources.json.
+
+Reference attachment used for organization:
+  C:\Users\DK11\.codex\attachments\5ff1d618-36fd-4d32-9366-afc9a482be89\Pasted text.txt
+
+-------------------------------------------------------------------------------
+19. RESEARCH AND WORKSHOP REFERENCE LINKS
+-------------------------------------------------------------------------------
+
+These sources were discussed or checked during the conversation. This list is
+not an exhaustive literature review. Paper findings are separate from project
+results. Confirm current versions, licenses and availability before formal use.
+
+WORKSHOP CONTEXT
+
+[R01] FDDM workshop page
+  https://cs.rkmvu.ac.in/~soumitra/fddm/
+  User-provided reference. Its detailed contents were not accessible during
+  this conversation.
+
+[R02] ICVGIP 2026 official conference website
+  https://www.icvgip.in/
+  Listing checked: FDDM, full-day workshop, 21 December 2026.
+  Do not infer workshop paper deadlines from main-conference dates.
+
+MOST RELEVANT TO THE SELECTED PROJECT
+
+[R03] FUSED: Forensic-Semantic Mixture-of-Experts for AI Inpainting Detection
+      and Localization — August 2026 preprint
+  https://arxiv.org/abs/2608.28302
+  Joint detection/localization and dependence on global generator artifacts.
+  Relevant candidate baseline and novelty boundary.
+
+[R04] DailyBench: A Unified Benchmark for AI-Generated and Manipulated Images
+      from Modern Generative Models — 2026 preprint, revised October 2026
+  https://arxiv.org/abs/2607.24016
+  Evaluates modern full-image synthesis and object-level manipulation.
+  Check latest revision; the authors note corrected AP metrics.
+
+[R05] DeCLIP: Decoding CLIP Representations for Deepfake Localization
+      — WACV 2025
+  https://openaccess.thecvf.com/content/WACV2025/html/Smeu_DeCLIP_Decoding_CLIP_Representations_for_Deepfake_Localization_WACV_2025_paper.html
+  Existing localization approach; useful comparison candidate.
+
+[R06] The SAFE Image Authenticity Challenge: Detecting and Localizing Partial
+      and Fully Synthetic Manipulations — WACV Workshops 2026
+  https://openaccess.thecvf.com/content/WACV2026W/SynRDinBAS/html/Nguyen_The_SAFE_Image_Authenticity_Challenge_Detecting_and_Localizing_Partial_and_WACVW_2026_paper.html
+  Establishes that partial/full synthesis detection and localization are already
+  benchmarked tasks.
+
+[R07] DiffusionPrint: Learning Generative Fingerprints for Diffusion-Based
+      Inpainting Localization — CVPR Workshops 2026
+  https://openaccess.thecvf.com/content/CVPR2026W/AIMS/html/Giakoumoglou_DiffusionPrint_Learning_Generative_Fingerprints_for_Diffusion-Based_Inpainting_Localization_CVPRW_2026_paper.html
+  Forensic feature learning for inpainting localization.
+
+GENERALIZATION, TRAINING BIAS AND RELIABILITY
+
+[R08] A Bias-Free Training Paradigm for More General AI-generated Image
+      Detection (B-Free) — CVPR 2025
+  https://openaccess.thecvf.com/content/CVPR2025/html/Guillaro_A_Bias-Free_Training_Paradigm_for_More_General_AI-generated_Image_Detection_CVPR_2025_paper.html
+  Training bias and cross-generator detection; relevant when planning data.
+
+[R09] Dissect and Prune: Enhancing Robustness in AI-Generated Image Detection
+      (DEAR) — ICML 2026
+  https://proceedings.mlr.press/v306/kim26k.html
+  Spurious-feature pruning and robustness to new generators/postprocessing.
+
+[R10] How well are open sourced AI-generated image detection models
+      out-of-the-box: A comprehensive benchmark study — 2026 preprint
+  https://arxiv.org/abs/2602.07814
+  Broad zero-shot comparison; detector rankings depend on test distribution.
+
+[R11] Deepfake-Eval-2024: A Multi-Modal In-the-Wild Benchmark of Deepfakes
+      Circulated in 2024 — preprint 2025; CVPR Workshops 2026 version
+  https://arxiv.org/abs/2503.02857
+  Motivation for evaluating media beyond controlled academic collections.
+
+[R12] Deepfake Detection that Generalizes Across Benchmarks (GenD)
+      — WACV 2026
+  https://github.com/yermandy/GenD
+  Parameter-efficient detection and cross-benchmark evaluation. Compression,
+  blur and resizing are already examined; those tests alone are not novel.
+
+[R13] LAION-Mobile: Evaluating Deepfake Detectors On One Million Smartphone
+      Photos — September 2026 preprint
+  https://arxiv.org/abs/2609.11134
+  Genuine-phone-photo false alarms and threshold issues. Its device coverage
+  is mainly an earlier smartphone-processing generation, not current flagships.
+
+[R14] Is It Certainly a Deepfake? Reliability Analysis in Detection &
+      Generation Ecosystem — ICCV Workshops 2025
+  https://arxiv.org/abs/2509.17550
+  Confidence, calibration and uncertainty are already research topics.
+
+GEOMETRY REFERENCES DISCUSSED EARLIER
+
+[R15] Perspective (In)consistency of Paint by Text — Hany Farid, 2022 preprint
+  https://arxiv.org/abs/2206.14617
+
+[R16] Hany Farid's geometric image-forensics explanation — 2017 reprint
+  https://farid.berkeley.edu/downloads/publications/amsci17.pdf
+  Perspective directions, vanishing points and camera geometry.
+
+[R17] Shadows Don't Lie and Lines Can't Bend! Generative Models don't know
+      Projective Geometry...for now — CVPR 2024
+  https://projective-geometry.github.io/
+  Existing automated geometry-based detection, with paper/code links.
+
+[R18] ControlVP: Interactive Geometric Refinement of AI-Generated Images
+      with Consistent Vanishing Points — WACV 2026
+  https://openaccess.thecvf.com/content/WACV2026/html/Okumura_ControlVP_Interactive_Geometric_Refinement_of_AI-Generated_Images_with_Consistent_Vanishing_WACV_2026_paper.html
+  Generated-image geometry can be improved; passing a perspective check does
+  not establish authentic provenance.
+
+OTHER DIRECTIONS CONSIDERED
+
+[R19] SAIDO: Generalizable Detection of AI-Generated Images via Scene-Aware
+      and Importance-Guided Dynamic Optimization in Continual Learning
+      — CVPR 2026
+  https://openaccess.thecvf.com/content/CVPR2026/papers/Hu_SAIDO_Generalizable_Detection_of_AI-Generated_Images_via_Scene-Aware_and_Importance-Guided_CVPR_2026_paper.pdf
+  Continual adaptation is an alternative direction, not the chosen scope.
+
+[R20] Omni-Fake: Benchmarking Unified Multimodal Social Media Deepfake
+      Detection — CVPR 2026
+  https://openaccess.thecvf.com/content/CVPR2026/html/Li_Omni-Fake_Benchmarking_Unified_Multimodal_Social_Media_Deepfake_Detection_CVPR_2026_paper.html
+  Broader detection/localization/explanation across modalities.
+
+[R21] RLDF: A Region-Level Deepfake Dataset and Benchmark for Partial-Face
+      Manipulation Detection — October 2026 preprint
+  https://arxiv.org/abs/2610.21438
+  Face-region manipulation is related but differs from general object editing.
+
+[R22] Pixels Don't Lie (But Your Detector Might): Bootstrapping MLLM-as-a-Judge
+      for Trustworthy Deepfake Detection and Reasoning Supervision
+      — CVPR 2026
+  https://openaccess.thecvf.com/content/CVPR2026/html/Kuckreja_Pixels_Dont_Lie_But_Your_Detector_Might_Bootstrapping_MLLM-as-a-Judge_for_CVPR_2026_paper.html
+  Explanation fidelity is an existing research subject, not a selected method.
+
+SOURCE-PHOTO REFERENCES
+  Individual Commons links and license details are in Section 08 and in
+  open_photo_starter\README.md and open_photo_starter\sources.json.
+
+-------------------------------------------------------------------------------
+20. WORKING CONVENTIONS FOR CONTINUING THE PROJECT
+-------------------------------------------------------------------------------
+
+The following are project-specific continuation notes, modeled on the supplied
+reference format. They summarize the current discussion; they do not override
+later explicit user instructions or applicable tool/access requirements.
+
+1. Read the current decisions, progress and latest log entry before changing
+   the project direction. Ask only for genuinely missing information.
+
+2. Preserve the selected focus: small AI-edited objects/regions in otherwise
+   real photographs, with detection and localization from one image.
+
+3. Keep original source files unchanged. Record derived files and their editing
+   provenance separately, including masks and any outside-selection changes.
+
+4. Distinguish completed work, user-reported outcomes, literature findings and
+   proposed experiments. Never invent accuracy, generated images, training runs,
+   execution success, dates or workshop acceptance.
+
+5. Treat model scores, masks and semantic explanations as different outputs.
+   Do not imply that localization alone identifies the exact original content.
+
+6. Maintain source-grouped splits and separate validation from test decisions.
+   Preserve individual source credits and licenses when sharing derived assets.
+
+7. Before presenting a method as novel, check directly relevant prior work,
+   particularly FUSED, DeCLIP, DiffusionPrint, SAFE and current related papers.
+
+8. When meaningful progress or a decision is made, update affected sections,
+   checklists, status and the chronological log. Add known IST timestamps when
+   actually available; do not fabricate times for older events.
+
+9. Retain the history of superseded suggestions so the latest user decision is
+   clear. Avoid repeatedly reopening settled choices without a concrete reason.
+
+10. Keep the next action concrete. At this stage it is creating and inspecting
+    the first controlled AI edit, followed by selecting benchmark/baseline data.
+
+-------------------------------------------------------------------------------
+21. HOW TO CONTINUE IN ANOTHER CHAT
+-------------------------------------------------------------------------------
+
+Copy the following context if needed:
+
+  Project: FDDM — Detection and Localization of Small AI-Edited Objects in
+  Photographs.
+
+  Workspace:
+  C:\Users\DK11\Documents\ChatGPT\icvgip workshop
+
+  Main reference:
+  C:\Users\DK11\Documents\ChatGPT\icvgip workshop\FDDM_Project_Reference.txt
+
+  Confirmed scope:
+  Detect and localize a small AI addition, removal or replacement inside an
+  otherwise real photograph. At inference the model receives only the image
+  being checked, not its original. Keep originals and masks for constructing
+  data, supervising localization and evaluating predictions separately.
+
+  Completed:
+  Five openly licensed original source JPEGs, credits, manifest and checked ZIP
+  are in open_photo_starter\ and open_photo_starter.zip.
+
+  Current state:
+  No AI edits, detector inference, training or evaluation results yet. The final
+  model, editor, benchmark and novelty claim are open.
+
+  Next step:
+  Create one localized edit, preferably remove the small globe and stand from
+  02_living_room.jpg. Save the original, output, requested mask and editor record.
+  Inspect whether the tool changes other regions before treating the mask as
+  ground truth. Then select and evaluate an existing localization baseline.
+
+  Read this reference for the decision history and research links. Continue the
+  chosen partial-edit project unless the user explicitly changes direction.
+
+-------------------------------------------------------------------------------
+END OF INITIAL FDDM PROJECT REFERENCE — 2026-10-31
+-------------------------------------------------------------------------------

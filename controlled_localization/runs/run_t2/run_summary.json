@@ -1,0 +1,12 @@
+{
+  "variant": "T2",
+  "device": "cuda",
+  "steps_completed": 60,
+  "total_train_runtime_seconds": 24.139359299908392,
+  "final_loss": 0.4150318205356598,
+  "validation_macro_iou": 0.7091626604254875,
+  "validation_pixel_f1": 0.8297532159491091,
+  "detection_auroc": 1.0,
+  "clean_fp_pct": 0.0,
+  "checkpoint_final": "I:\\icvgip workshop\\controlled_localization\\runs\\run_t2\\checkpoint_final.pt"
+}

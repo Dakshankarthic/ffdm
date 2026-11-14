@@ -1,0 +1,14 @@
+{
+  "image_path": "I:\\icvgip workshop\\controlled_localization\\reports\\synthetic_demo\\images\\sample_02_img.png",
+  "checkpoint": "I:\\icvgip workshop\\controlled_localization\\reports\\synthetic_demo\\synthetic_checkpoint.pt",
+  "policy_name": "synthetic_debug_policy",
+  "raw_score": 0.64682936668396,
+  "is_fake_prediction": false,
+  "t_image": 0.7075,
+  "t_mask": 0.5,
+  "score_direction": "higher_is_fake",
+  "width": 512,
+  "height": 512,
+  "tile_count": 4,
+  "runtime_seconds": 0.3162438999861479
+}

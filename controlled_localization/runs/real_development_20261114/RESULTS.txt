@@ -1,0 +1,29 @@
+REAL-IMAGE DEVELOPMENT RESULTS — 2026-11-14
+254 training images; 66 source-ID-disjoint validation images.
+
+T1_extended step 1200: IoU 0.1886, AUROC 0.6278, genuine positive area 0.2556
+T1_extended step 1100: IoU 0.1818, AUROC 0.5781, genuine positive area 0.1388
+T1_real_v2 step 400: IoU 0.1784, AUROC 0.6085, genuine positive area 0.2016
+T1_extended step 200: IoU 0.1640, AUROC 0.5147, genuine positive area 0.1316
+T2_real_v2 step 400: IoU 0.1637, AUROC 0.6232, genuine positive area 0.1686
+T1_extended step 500: IoU 0.1627, AUROC 0.6498, genuine positive area 0.1606
+T1_extended step 1000: IoU 0.1617, AUROC 0.5368, genuine positive area 0.0771
+T1_extended step 700: IoU 0.1570, AUROC 0.6222, genuine positive area 0.1961
+T1_extended step 800: IoU 0.1565, AUROC 0.4890, genuine positive area 0.0832
+T1_extended step 400: IoU 0.1555, AUROC 0.5542, genuine positive area 0.0917
+T1_extended step 900: IoU 0.1506, AUROC 0.6112, genuine positive area 0.0972
+T1_extended step 300: IoU 0.1435, AUROC 0.6498, genuine positive area 0.0811
+T2_real_v2 step 200: IoU 0.1174, AUROC 0.6011, genuine positive area 0.0730
+T1_real_v2 step 200: IoU 0.1148, AUROC 0.5496, genuine positive area 0.0644
+T2_real_v2 step 300: IoU 0.0867, AUROC 0.6222, genuine positive area 0.0410
+T1_extended step 600: IoU 0.0772, AUROC 0.4743, genuine positive area 0.0264
+T1_real_v2 step 300: IoU 0.0677, AUROC 0.6517, genuine positive area 0.0192
+T1_extended step 100: IoU 0.0230, AUROC 0.5312, genuine positive area 0.0039
+T1_real_v2 step 100: IoU 0.0001, AUROC 0.5285, genuine positive area 0.0000
+T2_real_v2 step 100: IoU 0.0001, AUROC 0.5919, genuine positive area 0.0000
+
+Selected checkpoint: I:\icvgip workshop\controlled_localization\runs\real_development_20261114\T1_extended\best.pt
+Validation-selected image threshold 0.946862; image FPR 0.0312; sensitivity 0.2941.
+These are development results, not independent test accuracy or proof of high accuracy.
+Viewer-derived image/mask encoding, limited source diversity, only two tiny validation edits, one seed, and repeated validation selection limit conclusions.
+T1_extended is a separate longer fine-tuning run, not an equal-budget T1/T2 comparison.

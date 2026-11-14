@@ -1,0 +1,446 @@
+{
+  "v1_sd15_only": {
+    "calibration": {
+      "best_alpha": 0.1,
+      "tau_pool": 0.9659,
+      "tau_whole": 0.5754,
+      "tau_hybrid": 0.9274
+    },
+    "overall_test": {
+      "score_pool": {
+        "roc_auc": 0.6388,
+        "acc": 0.6,
+        "bal_acc": 0.6,
+        "f1": 0.6364,
+        "tau": 0.9659
+      },
+      "score_whole": {
+        "roc_auc": 0.6548,
+        "acc": 0.59,
+        "bal_acc": 0.59,
+        "f1": 0.6239,
+        "tau": 0.5754
+      },
+      "score_hybrid": {
+        "roc_auc": 0.6592,
+        "acc": 0.63,
+        "bal_acc": 0.63,
+        "f1": 0.6542,
+        "tau": 0.9274
+      }
+    },
+    "per_generator": {
+      "sd15": {
+        "pool": {
+          "roc_auc": 0.74,
+          "acc": 0.75,
+          "bal_acc": 0.75,
+          "f1": 0.7826,
+          "tau": 0.9659
+        },
+        "whole": {
+          "roc_auc": 0.77,
+          "acc": 0.65,
+          "bal_acc": 0.65,
+          "f1": 0.6667,
+          "tau": 0.5754
+        },
+        "hybrid": {
+          "roc_auc": 0.78,
+          "acc": 0.75,
+          "bal_acc": 0.75,
+          "f1": 0.7826,
+          "tau": 0.9274
+        }
+      },
+      "sd2": {
+        "pool": {
+          "roc_auc": 0.52,
+          "acc": 0.5,
+          "bal_acc": 0.5,
+          "f1": 0.5833,
+          "tau": 0.9659
+        },
+        "whole": {
+          "roc_auc": 0.69,
+          "acc": 0.55,
+          "bal_acc": 0.55,
+          "f1": 0.5263,
+          "tau": 0.5754
+        },
+        "hybrid": {
+          "roc_auc": 0.56,
+          "acc": 0.6,
+          "bal_acc": 0.6,
+          "f1": 0.6364,
+          "tau": 0.9274
+        }
+      },
+      "sd3": {
+        "pool": {
+          "roc_auc": 0.74,
+          "acc": 0.7,
+          "bal_acc": 0.7,
+          "f1": 0.7,
+          "tau": 0.9659
+        },
+        "whole": {
+          "roc_auc": 0.64,
+          "acc": 0.55,
+          "bal_acc": 0.55,
+          "f1": 0.64,
+          "tau": 0.5754
+        },
+        "hybrid": {
+          "roc_auc": 0.74,
+          "acc": 0.7,
+          "bal_acc": 0.7,
+          "f1": 0.7,
+          "tau": 0.9274
+        }
+      },
+      "sdxl": {
+        "pool": {
+          "roc_auc": 0.42,
+          "acc": 0.45,
+          "bal_acc": 0.45,
+          "f1": 0.4762,
+          "tau": 0.9659
+        },
+        "whole": {
+          "roc_auc": 0.42,
+          "acc": 0.45,
+          "bal_acc": 0.45,
+          "f1": 0.5217,
+          "tau": 0.5754
+        },
+        "hybrid": {
+          "roc_auc": 0.4,
+          "acc": 0.45,
+          "bal_acc": 0.45,
+          "f1": 0.4762,
+          "tau": 0.9274
+        }
+      },
+      "flux": {
+        "pool": {
+          "roc_auc": 0.71,
+          "acc": 0.6,
+          "bal_acc": 0.6,
+          "f1": 0.6364,
+          "tau": 0.9659
+        },
+        "whole": {
+          "roc_auc": 0.78,
+          "acc": 0.75,
+          "bal_acc": 0.75,
+          "f1": 0.7619,
+          "tau": 0.5754
+        },
+        "hybrid": {
+          "roc_auc": 0.78,
+          "acc": 0.65,
+          "bal_acc": 0.65,
+          "f1": 0.6667,
+          "tau": 0.9274
+        }
+      }
+    }
+  },
+  "v1_multigen": {
+    "calibration": {
+      "best_alpha": 0.0,
+      "tau_pool": 0.9794,
+      "tau_whole": 0.6381,
+      "tau_hybrid": 0.9794
+    },
+    "overall_test": {
+      "score_pool": {
+        "roc_auc": 0.7272,
+        "acc": 0.6,
+        "bal_acc": 0.6,
+        "f1": 0.5745,
+        "tau": 0.9794
+      },
+      "score_whole": {
+        "roc_auc": 0.684,
+        "acc": 0.62,
+        "bal_acc": 0.62,
+        "f1": 0.5476,
+        "tau": 0.6381
+      },
+      "score_hybrid": {
+        "roc_auc": 0.7272,
+        "acc": 0.6,
+        "bal_acc": 0.6,
+        "f1": 0.5745,
+        "tau": 0.9794
+      }
+    },
+    "per_generator": {
+      "sd15": {
+        "pool": {
+          "roc_auc": 0.92,
+          "acc": 0.85,
+          "bal_acc": 0.85,
+          "f1": 0.8571,
+          "tau": 0.9794
+        },
+        "whole": {
+          "roc_auc": 0.8,
+          "acc": 0.65,
+          "bal_acc": 0.65,
+          "f1": 0.5882,
+          "tau": 0.6381
+        },
+        "hybrid": {
+          "roc_auc": 0.92,
+          "acc": 0.85,
+          "bal_acc": 0.85,
+          "f1": 0.8571,
+          "tau": 0.9794
+        }
+      },
+      "sd2": {
+        "pool": {
+          "roc_auc": 0.75,
+          "acc": 0.5,
+          "bal_acc": 0.5,
+          "f1": 0.5455,
+          "tau": 0.9794
+        },
+        "whole": {
+          "roc_auc": 0.75,
+          "acc": 0.65,
+          "bal_acc": 0.65,
+          "f1": 0.5882,
+          "tau": 0.6381
+        },
+        "hybrid": {
+          "roc_auc": 0.75,
+          "acc": 0.5,
+          "bal_acc": 0.5,
+          "f1": 0.5455,
+          "tau": 0.9794
+        }
+      },
+      "sd3": {
+        "pool": {
+          "roc_auc": 0.8,
+          "acc": 0.6,
+          "bal_acc": 0.6,
+          "f1": 0.5,
+          "tau": 0.9794
+        },
+        "whole": {
+          "roc_auc": 0.73,
+          "acc": 0.65,
+          "bal_acc": 0.65,
+          "f1": 0.6316,
+          "tau": 0.6381
+        },
+        "hybrid": {
+          "roc_auc": 0.8,
+          "acc": 0.6,
+          "bal_acc": 0.6,
+          "f1": 0.5,
+          "tau": 0.9794
+        }
+      },
+      "sdxl": {
+        "pool": {
+          "roc_auc": 0.51,
+          "acc": 0.5,
+          "bal_acc": 0.5,
+          "f1": 0.4444,
+          "tau": 0.9794
+        },
+        "whole": {
+          "roc_auc": 0.41,
+          "acc": 0.5,
+          "bal_acc": 0.5,
+          "f1": 0.2857,
+          "tau": 0.6381
+        },
+        "hybrid": {
+          "roc_auc": 0.51,
+          "acc": 0.5,
+          "bal_acc": 0.5,
+          "f1": 0.4444,
+          "tau": 0.9794
+        }
+      },
+      "flux": {
+        "pool": {
+          "roc_auc": 0.62,
+          "acc": 0.55,
+          "bal_acc": 0.55,
+          "f1": 0.4706,
+          "tau": 0.9794
+        },
+        "whole": {
+          "roc_auc": 0.74,
+          "acc": 0.65,
+          "bal_acc": 0.65,
+          "f1": 0.5882,
+          "tau": 0.6381
+        },
+        "hybrid": {
+          "roc_auc": 0.62,
+          "acc": 0.55,
+          "bal_acc": 0.55,
+          "f1": 0.4706,
+          "tau": 0.9794
+        }
+      }
+    }
+  },
+  "v2_cross_attn": {
+    "calibration": {
+      "best_alpha": 0.15,
+      "tau_pool": 0.97,
+      "tau_whole": 0.7488,
+      "tau_hybrid": 0.9358
+    },
+    "overall_test": {
+      "score_pool": {
+        "roc_auc": 0.6432,
+        "acc": 0.57,
+        "bal_acc": 0.57,
+        "f1": 0.5657,
+        "tau": 0.97
+      },
+      "score_whole": {
+        "roc_auc": 0.6876,
+        "acc": 0.65,
+        "bal_acc": 0.65,
+        "f1": 0.6154,
+        "tau": 0.7488
+      },
+      "score_hybrid": {
+        "roc_auc": 0.69,
+        "acc": 0.67,
+        "bal_acc": 0.67,
+        "f1": 0.6526,
+        "tau": 0.9358
+      }
+    },
+    "per_generator": {
+      "sd15": {
+        "pool": {
+          "roc_auc": 0.67,
+          "acc": 0.55,
+          "bal_acc": 0.55,
+          "f1": 0.5263,
+          "tau": 0.97
+        },
+        "whole": {
+          "roc_auc": 0.78,
+          "acc": 0.75,
+          "bal_acc": 0.75,
+          "f1": 0.6667,
+          "tau": 0.7488
+        },
+        "hybrid": {
+          "roc_auc": 0.72,
+          "acc": 0.6,
+          "bal_acc": 0.6,
+          "f1": 0.5556,
+          "tau": 0.9358
+        }
+      },
+      "sd2": {
+        "pool": {
+          "roc_auc": 0.55,
+          "acc": 0.5,
+          "bal_acc": 0.5,
+          "f1": 0.5833,
+          "tau": 0.97
+        },
+        "whole": {
+          "roc_auc": 0.61,
+          "acc": 0.5,
+          "bal_acc": 0.5,
+          "f1": 0.4444,
+          "tau": 0.7488
+        },
+        "hybrid": {
+          "roc_auc": 0.62,
+          "acc": 0.65,
+          "bal_acc": 0.65,
+          "f1": 0.6667,
+          "tau": 0.9358
+        }
+      },
+      "sd3": {
+        "pool": {
+          "roc_auc": 0.86,
+          "acc": 0.75,
+          "bal_acc": 0.75,
+          "f1": 0.7368,
+          "tau": 0.97
+        },
+        "whole": {
+          "roc_auc": 0.71,
+          "acc": 0.65,
+          "bal_acc": 0.65,
+          "f1": 0.6667,
+          "tau": 0.7488
+        },
+        "hybrid": {
+          "roc_auc": 0.86,
+          "acc": 0.8,
+          "bal_acc": 0.8,
+          "f1": 0.8,
+          "tau": 0.9358
+        }
+      },
+      "sdxl": {
+        "pool": {
+          "roc_auc": 0.52,
+          "acc": 0.55,
+          "bal_acc": 0.55,
+          "f1": 0.5263,
+          "tau": 0.97
+        },
+        "whole": {
+          "roc_auc": 0.56,
+          "acc": 0.55,
+          "bal_acc": 0.55,
+          "f1": 0.4706,
+          "tau": 0.7488
+        },
+        "hybrid": {
+          "roc_auc": 0.59,
+          "acc": 0.5,
+          "bal_acc": 0.5,
+          "f1": 0.4444,
+          "tau": 0.9358
+        }
+      },
+      "flux": {
+        "pool": {
+          "roc_auc": 0.63,
+          "acc": 0.5,
+          "bal_acc": 0.5,
+          "f1": 0.4444,
+          "tau": 0.97
+        },
+        "whole": {
+          "roc_auc": 0.78,
+          "acc": 0.8,
+          "bal_acc": 0.8,
+          "f1": 0.8,
+          "tau": 0.7488
+        },
+        "hybrid": {
+          "roc_auc": 0.73,
+          "acc": 0.8,
+          "bal_acc": 0.8,
+          "f1": 0.7778,
+          "tau": 0.9358
+        }
+      }
+    }
+  }
+}

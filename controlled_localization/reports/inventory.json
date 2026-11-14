@@ -1,0 +1,32 @@
+{
+  "inventory_date": "2026-11-13",
+  "workspace": "I:\\icvgip workshop\\controlled_localization",
+  "data_assets": {
+    "open_photo_starter": {
+      "path": "open_photo_starter",
+      "count": 5,
+      "type": "authentic_photographs",
+      "license": "CC0 / CC BY-SA / Public Domain",
+      "status": "pristine_candidates_unpaired"
+    },
+    "opensdi_development_preview": {
+      "path": "research_data\\opensdi_development_preview",
+      "count": 16,
+      "type": "viewer_cached_sd15",
+      "license": "CC BY-SA 4.0",
+      "status": "unpaired_viewer_samples"
+    },
+    "baseline_frozen_evaluation": {
+      "path": "baseline_work\\data",
+      "count": 120,
+      "type": "frozen_benchmark",
+      "license": "CC BY-SA 4.0",
+      "status": "held_out_baseline_only"
+    }
+  },
+  "data_gaps": [
+    "No verified native_pixel_paste paired A/C sets with known originals currently ready for research training",
+    "Viewer-cached JPEGs lack canonical lossless PNG provenance",
+    "Outside-mask consistency requires strict paired alignment which needs verified source groups"
+  ]
+}

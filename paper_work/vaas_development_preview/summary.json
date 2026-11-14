@@ -1,0 +1,25 @@
+{
+  "n": 16,
+  "counts": {
+    "0": 8,
+    "1": 8
+  },
+  "mean_S_H_by_label": {
+    "0": 0.7344400546540948,
+    "1": 0.6369711695551694
+  },
+  "label_mapping": {
+    "0": "real",
+    "1": "fake"
+  },
+  "model_repo": "OBA-Research/vaas",
+  "model_variant": "v2-base-df2023",
+  "device": "NVIDIA GeForce RTX 2070 SUPER",
+  "torch": "2.6.0+cu124",
+  "transformers": "4.57.6",
+  "vaas": "0.2.0",
+  "dataset": "nebula/OpenSDI_train",
+  "split": "sd15",
+  "sample": "16 systematically selected viewer training rows, not random, non-independent test",
+  "warning": "exploratory only, viewer may transcode images/masks, unknown overlap and score orientation; not detection performance or an AI-edit probability; no localization metrics computed"
+}

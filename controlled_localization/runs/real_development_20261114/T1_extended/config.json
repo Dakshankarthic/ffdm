@@ -1,0 +1,9 @@
+{
+  "variant": "T1",
+  "steps": 1200,
+  "seed": 42,
+  "tile": 384,
+  "initialization": "I:\\icvgip workshop\\controlled_localization\\runs\\real_development_20261114\\T1_real_v2\\best.pt",
+  "protocol": "v1.2 unpaired within-image degradation; outside loss disabled",
+  "manifest_sha256": "08b7acbb741182a832edebe674231e4f312986aaf56235fca0ac477952610130"
+}

@@ -1,0 +1,58 @@
+# Virtual environments
+.venv/
+venv/
+env/
+
+# Python cache
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+
+# Model checkpoints and weights (exceeds GitHub 100MB limit)
+*.pt
+*.pth
+*.ckpt
+*.bin
+*.safetensors
+*.onnx
+*.tar
+*.zip
+*.7z
+*.gz
+*.tar.gz
+*.npy
+*.npz
+features_cache.pt
+runs/**/*.pt
+runs/**/*.pth
+runs/**/*.bin
+runs/**/features_cache.pt
+
+# Raw datasets, images, and heavy media (keep git repo code/reports only)
+*.jpg
+*.jpeg
+*.png
+*.webp
+*.gif
+*.bmp
+*.tiff
+*.mp4
+*.avi
+*.mov
+baseline_work/data/
+controlled_localization/runs/**/data/
+research_data/
+tmp/
+
+# Cloned third-party baselines
+baselines/
+sites/
+
+# OS and IDE files
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
+*.swp
+*.log

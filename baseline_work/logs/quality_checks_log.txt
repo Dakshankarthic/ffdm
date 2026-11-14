@@ -1,0 +1,18 @@
+======================================================================
+BASELINE METRIC AND INTEGRITY UNIT TESTS
+======================================================================
+Ran 7 unit tests:
+1. test_iou_perfect_match: Perfect predicted mask vs GT -> IoU=1.0 and F1=1.0. Passed.
+2. test_iou_disjoint_masks: Disjoint predicted and GT mask -> IoU=0.0 and F1=0.0. Passed.
+3. test_iou_known_2x2: Hand-calculated 2x2 overlap -> IoU=1/3 and F1=0.5. Passed.
+4. test_iou_empty_policies:
+   - Both empty -> IoU=1.0, F1=1.0
+   - Clean image with false alarm -> IoU=0.0, F1=0.0
+   - Edited image with complete miss -> IoU=0.0, F1=0.0
+   Passed.
+5. test_confusion_matrix_and_metrics: 4-sample hand-crafted confusion matrix -> TP=1, FP=1, TN=1, FN=1, Acc=0.5, Bal_Acc=0.5, Prec=0.5, Rec=0.5, F1=0.5, FPR=0.5. Passed.
+6. test_edit_tier_bins: Exact tier boundary assignment for <2%, 2-10%, >10%. Passed.
+7. test_split_leakage_detector: Detects duplicate SHA256 hashes between splits. Passed.
+
+Status: ALL 7 TESTS PASSED (Ran in 0.004s).
+

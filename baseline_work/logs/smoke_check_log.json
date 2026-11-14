@@ -1,0 +1,22 @@
+{
+  "status": "PASSED",
+  "model_id": "OBA-Research/vaas:v2-base-df2023",
+  "device": "cuda",
+  "image_tested": "I:\\icvgip workshop\\research_data\\opensdi_development_preview\\001000_image.jpg",
+  "runtime_seconds": 8.5111,
+  "raw_scores": {
+    "S_F": 0.6146432432047269,
+    "S_P": 0.9048202857375145,
+    "S_H": 0.7597317644711207
+  },
+  "map_resolution": [
+    224,
+    224
+  ],
+  "map_range": [
+    1.2623598195204977e-05,
+    0.9748014211654663
+  ],
+  "all_finite": true,
+  "peak_gpu_memory_mb": 454.72
+}

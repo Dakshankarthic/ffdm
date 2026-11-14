@@ -1,0 +1,389 @@
+{
+  "v1_sd15_only": {
+    "score_pool": {
+      "roc_auc": 0.6388,
+      "acc": 0.5,
+      "bal_acc": 0.5,
+      "f1": 0.6667
+    },
+    "score_whole": {
+      "roc_auc": 0.6548,
+      "acc": 0.55,
+      "bal_acc": 0.55,
+      "f1": 0.6809
+    },
+    "score_hybrid": {
+      "roc_auc": 0.6684,
+      "acc": 0.5,
+      "bal_acc": 0.5,
+      "f1": 0.6667
+    },
+    "score_max": {
+      "roc_auc": 0.6388,
+      "acc": 0.5,
+      "bal_acc": 0.5,
+      "f1": 0.6667
+    },
+    "best_alpha": 0.3,
+    "per_generator": {
+      "sd15": {
+        "pool": {
+          "roc_auc": 0.74,
+          "acc": 0.5,
+          "bal_acc": 0.5,
+          "f1": 0.6667
+        },
+        "whole": {
+          "roc_auc": 0.77,
+          "acc": 0.65,
+          "bal_acc": 0.65,
+          "f1": 0.7407
+        },
+        "hybrid": {
+          "roc_auc": 0.78,
+          "acc": 0.5,
+          "bal_acc": 0.5,
+          "f1": 0.6667
+        }
+      },
+      "sd2": {
+        "pool": {
+          "roc_auc": 0.52,
+          "acc": 0.5,
+          "bal_acc": 0.5,
+          "f1": 0.6667
+        },
+        "whole": {
+          "roc_auc": 0.69,
+          "acc": 0.6,
+          "bal_acc": 0.6,
+          "f1": 0.7143
+        },
+        "hybrid": {
+          "roc_auc": 0.62,
+          "acc": 0.5,
+          "bal_acc": 0.5,
+          "f1": 0.6667
+        }
+      },
+      "sd3": {
+        "pool": {
+          "roc_auc": 0.74,
+          "acc": 0.5,
+          "bal_acc": 0.5,
+          "f1": 0.6667
+        },
+        "whole": {
+          "roc_auc": 0.64,
+          "acc": 0.5,
+          "bal_acc": 0.5,
+          "f1": 0.6667
+        },
+        "hybrid": {
+          "roc_auc": 0.74,
+          "acc": 0.5,
+          "bal_acc": 0.5,
+          "f1": 0.6667
+        }
+      },
+      "sdxl": {
+        "pool": {
+          "roc_auc": 0.42,
+          "acc": 0.5,
+          "bal_acc": 0.5,
+          "f1": 0.6667
+        },
+        "whole": {
+          "roc_auc": 0.42,
+          "acc": 0.45,
+          "bal_acc": 0.45,
+          "f1": 0.6207
+        },
+        "hybrid": {
+          "roc_auc": 0.38,
+          "acc": 0.5,
+          "bal_acc": 0.5,
+          "f1": 0.6667
+        }
+      },
+      "flux": {
+        "pool": {
+          "roc_auc": 0.71,
+          "acc": 0.5,
+          "bal_acc": 0.5,
+          "f1": 0.6667
+        },
+        "whole": {
+          "roc_auc": 0.78,
+          "acc": 0.55,
+          "bal_acc": 0.55,
+          "f1": 0.6667
+        },
+        "hybrid": {
+          "roc_auc": 0.81,
+          "acc": 0.5,
+          "bal_acc": 0.5,
+          "f1": 0.6667
+        }
+      }
+    }
+  },
+  "v1_multigen": {
+    "score_pool": {
+      "roc_auc": 0.7272,
+      "acc": 0.5,
+      "bal_acc": 0.5,
+      "f1": 0.6667
+    },
+    "score_whole": {
+      "roc_auc": 0.684,
+      "acc": 0.66,
+      "bal_acc": 0.66,
+      "f1": 0.6792
+    },
+    "score_hybrid": {
+      "roc_auc": 0.748,
+      "acc": 0.5,
+      "bal_acc": 0.5,
+      "f1": 0.6667
+    },
+    "score_max": {
+      "roc_auc": 0.7288,
+      "acc": 0.5,
+      "bal_acc": 0.5,
+      "f1": 0.6667
+    },
+    "best_alpha": 0.05,
+    "per_generator": {
+      "sd15": {
+        "pool": {
+          "roc_auc": 0.92,
+          "acc": 0.5,
+          "bal_acc": 0.5,
+          "f1": 0.6667
+        },
+        "whole": {
+          "roc_auc": 0.8,
+          "acc": 0.75,
+          "bal_acc": 0.75,
+          "f1": 0.7619
+        },
+        "hybrid": {
+          "roc_auc": 0.94,
+          "acc": 0.5,
+          "bal_acc": 0.5,
+          "f1": 0.6667
+        }
+      },
+      "sd2": {
+        "pool": {
+          "roc_auc": 0.75,
+          "acc": 0.5,
+          "bal_acc": 0.5,
+          "f1": 0.6667
+        },
+        "whole": {
+          "roc_auc": 0.75,
+          "acc": 0.7,
+          "bal_acc": 0.7,
+          "f1": 0.7
+        },
+        "hybrid": {
+          "roc_auc": 0.67,
+          "acc": 0.5,
+          "bal_acc": 0.5,
+          "f1": 0.6667
+        }
+      },
+      "sd3": {
+        "pool": {
+          "roc_auc": 0.8,
+          "acc": 0.5,
+          "bal_acc": 0.5,
+          "f1": 0.6667
+        },
+        "whole": {
+          "roc_auc": 0.73,
+          "acc": 0.65,
+          "bal_acc": 0.65,
+          "f1": 0.6957
+        },
+        "hybrid": {
+          "roc_auc": 0.83,
+          "acc": 0.5,
+          "bal_acc": 0.5,
+          "f1": 0.6667
+        }
+      },
+      "sdxl": {
+        "pool": {
+          "roc_auc": 0.51,
+          "acc": 0.5,
+          "bal_acc": 0.5,
+          "f1": 0.6667
+        },
+        "whole": {
+          "roc_auc": 0.41,
+          "acc": 0.5,
+          "bal_acc": 0.5,
+          "f1": 0.5
+        },
+        "hybrid": {
+          "roc_auc": 0.53,
+          "acc": 0.5,
+          "bal_acc": 0.5,
+          "f1": 0.6667
+        }
+      },
+      "flux": {
+        "pool": {
+          "roc_auc": 0.62,
+          "acc": 0.5,
+          "bal_acc": 0.5,
+          "f1": 0.6667
+        },
+        "whole": {
+          "roc_auc": 0.74,
+          "acc": 0.7,
+          "bal_acc": 0.7,
+          "f1": 0.7273
+        },
+        "hybrid": {
+          "roc_auc": 0.72,
+          "acc": 0.5,
+          "bal_acc": 0.5,
+          "f1": 0.6667
+        }
+      }
+    }
+  },
+  "v2_cross_attn": {
+    "score_pool": {
+      "roc_auc": 0.6432,
+      "acc": 0.5,
+      "bal_acc": 0.5,
+      "f1": 0.6667
+    },
+    "score_whole": {
+      "roc_auc": 0.6876,
+      "acc": 0.5,
+      "bal_acc": 0.5,
+      "f1": 0.6667
+    },
+    "score_hybrid": {
+      "roc_auc": 0.7112,
+      "acc": 0.5,
+      "bal_acc": 0.5,
+      "f1": 0.6667
+    },
+    "score_max": {
+      "roc_auc": 0.644,
+      "acc": 0.5,
+      "bal_acc": 0.5,
+      "f1": 0.6667
+    },
+    "best_alpha": 0.4,
+    "per_generator": {
+      "sd15": {
+        "pool": {
+          "roc_auc": 0.67,
+          "acc": 0.5,
+          "bal_acc": 0.5,
+          "f1": 0.6667
+        },
+        "whole": {
+          "roc_auc": 0.78,
+          "acc": 0.5,
+          "bal_acc": 0.5,
+          "f1": 0.6667
+        },
+        "hybrid": {
+          "roc_auc": 0.77,
+          "acc": 0.5,
+          "bal_acc": 0.5,
+          "f1": 0.6667
+        }
+      },
+      "sd2": {
+        "pool": {
+          "roc_auc": 0.55,
+          "acc": 0.5,
+          "bal_acc": 0.5,
+          "f1": 0.6667
+        },
+        "whole": {
+          "roc_auc": 0.61,
+          "acc": 0.5,
+          "bal_acc": 0.5,
+          "f1": 0.6667
+        },
+        "hybrid": {
+          "roc_auc": 0.59,
+          "acc": 0.5,
+          "bal_acc": 0.5,
+          "f1": 0.6667
+        }
+      },
+      "sd3": {
+        "pool": {
+          "roc_auc": 0.86,
+          "acc": 0.5,
+          "bal_acc": 0.5,
+          "f1": 0.6667
+        },
+        "whole": {
+          "roc_auc": 0.71,
+          "acc": 0.5,
+          "bal_acc": 0.5,
+          "f1": 0.6667
+        },
+        "hybrid": {
+          "roc_auc": 0.83,
+          "acc": 0.5,
+          "bal_acc": 0.5,
+          "f1": 0.6667
+        }
+      },
+      "sdxl": {
+        "pool": {
+          "roc_auc": 0.52,
+          "acc": 0.5,
+          "bal_acc": 0.5,
+          "f1": 0.6667
+        },
+        "whole": {
+          "roc_auc": 0.56,
+          "acc": 0.5,
+          "bal_acc": 0.5,
+          "f1": 0.6667
+        },
+        "hybrid": {
+          "roc_auc": 0.59,
+          "acc": 0.5,
+          "bal_acc": 0.5,
+          "f1": 0.6667
+        }
+      },
+      "flux": {
+        "pool": {
+          "roc_auc": 0.63,
+          "acc": 0.5,
+          "bal_acc": 0.5,
+          "f1": 0.6667
+        },
+        "whole": {
+          "roc_auc": 0.78,
+          "acc": 0.5,
+          "bal_acc": 0.5,
+          "f1": 0.6667
+        },
+        "hybrid": {
+          "roc_auc": 0.79,
+          "acc": 0.5,
+          "bal_acc": 0.5,
+          "f1": 0.6667
+        }
+      }
+    }
+  }
+}

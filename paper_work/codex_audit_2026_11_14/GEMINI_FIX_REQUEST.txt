@@ -1,0 +1,26 @@
+GEMINI: REQUIRED REPAIRS BEFORE RESEARCH TRAINING
+
+Read RESEARCH_AND_CODE_AUDIT.txt in this folder and preserve existing outputs.
+1. Fix train.py to actually read --manifest and --schedule, validate and load
+   paired views and distinct validation groups. Missing inputs must fail with a
+   clear error; synthetic fixture use requires an explicit --synthetic-smoke flag.
+2. Add an integration test using two distinct on-disk manifests and schedules:
+   verify consumed IDs/crops, verify missing paths fail, and prove validation
+   contains no training source IDs. Record manifest and schedule hashes.
+3. Use validation-only naming and metrics for held-out groups; relabel the
+   existing fixture evaluations as in-sample synthetic in a correction note.
+4. Save and restore RNG/sampler states and prove uninterrupted versus resumed
+   runs consume the same schedule; verify optimizer and scheduler behavior.
+5. Reject mismatched image/mask geometry without a verified explicit transform.
+   Correct ICC conversion documentation or implement auditable conversion.
+6. Report image-level false-positive rate separately from false-positive pixel
+   area. Existing benchmark predicted every genuine image positive.
+7. Do not claim that 17 passing component tests establish research readiness.
+   Add tests that exercise the real training CLI and source split checks.
+8. Do not overwrite or promote the already-inspected 100-image benchmark to an
+   untouched test. Provide exact commands, new tests, outputs and limitations.
+
+T1/T2 may be studied with separate clean and edited source images, each paired
+with its own degraded version; T2O requires true aligned original/edit pairs.
+If implementing this alternative, explicitly version its manifest/sampler and
+record that it differs from the original four-view source-group design.

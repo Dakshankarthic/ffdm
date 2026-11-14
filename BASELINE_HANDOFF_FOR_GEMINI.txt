@@ -1,0 +1,309 @@
+BASELINE HANDOFF FOR ANTIGRAVITY IDE / GEMINI
+============================================
+Project: FDDM — AI-edited image detection and localization
+Prepared: 13 November 2026 (Asia/Kolkata)
+Active workspace: I:\icvgip workshop
+Audience: Gemini coding agent working on BASELINE EVALUATION.
+
+USER'S OBJECTIVE
+---------------
+Build a reliable comparison against existing pretrained image-forensics models
+for a research paper. The eventual proposed model receives ONE possibly edited
+image and predicts an image score and a suspicious-region mask. Baseline models
+must receive the inspected image only; originals and masks are for evaluation.
+
+Your job is to produce reproducible baseline predictions and metrics, plus all
+logs, manifests and limitations needed for a fair scientific comparison.
+This is a separate workstream: do not implement or change EchoSeam-Net, do not
+edit the Pixel Lab website, and do not overwrite existing project results.
+
+IMPORTANT: This is an instruction/handoff, not evidence that any benchmark or
+paper is complete. Do not invent a model result, a published score, provenance,
+license, score direction, mask meaning, numerical threshold, or success.
+
+STARTING POINT — ACTUAL CURRENT STATE
+-------------------------------------
+1. GPU observed: NVIDIA GeForce RTX 2070 SUPER, 8 GiB; CUDA worked on 2026-11-13.
+   The user also has Kaggle access; GPU allocation and quota have not been checked.
+2. Workspace drive is I:. Keep all new work there unless the user instructs
+   otherwise. Use PowerShell and full paths when commands are run on Windows.
+3. Existing VAAS environment:
+   I:\icvgip workshop\baselines\vaas-env
+   It installed vaas==0.2.0, torch==2.6.0+cu124,
+   torchvision==0.21.0+cu124, transformers==4.57.6. It uses inherited system
+   packages, has reported unrelated dependency conflicts, and is NOT a clean,
+   locked environment. Do not alter global Python or other existing projects.
+4. VAAS v2-base-df2023 ran on the GPU for 16 OpenSDI training-viewer images:
+   8 labeled real and 8 fake, chosen at systematic offsets. These are
+   NONRANDOM DEVELOPMENT SAMPLES, NOT an independent test or paper benchmark.
+   Outputs: paper_work\vaas_development_preview\scores.csv and summary.json.
+   Script: paper_work\run_vaas_development_preview.py
+   Inputs: research_data\opensdi_development_preview\manifest.json
+   Viewer-cached JPEGs MAY be transcoded. The saved map is 224 x 224.
+5. IMPORTANT SCORE ISSUE: VAAS paper describes S_F as an anomaly/deviation,
+   higher for greater deviation; installed vaas 0.2.0 hybrid_score.py instead
+   calculates S_F=exp(-delta/sigma), a fidelity-like value higher near the
+   reference, and S_P=1-mean(pred_sig). The model card calls S_H an anomaly
+   score. This version-specific discrepancy is NOT RESOLVED. Do not report
+   accuracy, AUC or invert a score based on guesswork; investigate first.
+   https://arxiv.org/html/2512.15512v1
+   https://huggingface.co/OBA-Research/vaas
+6. DeCLIP source is already at baselines\DeCLIP (commit
+   cb9de1077a3600653c7e896fe201535fb2b68c44); official checkpoint link was
+   redirected to Google sign-in. It has NOT run. Source license and bundled
+   third-party terms must be checked. Do not bypass access controls.
+7. TruFor README says downloading/using its files implicitly signifies
+   agreement with its custom license; it has NOT been downloaded here.
+   Inspect terms and applicability before obtaining files. If acceptance of a
+   legally binding agreement is required, ask the user at that action.
+8. Existing notes: project_records\baseline_setup_notes.md,
+   paper_work\research_and_experiment_plan.md and
+   paper_work\related_work_and_research_gap.md.
+9. The original globe-removal example does not have a verified ground-truth mask
+   or complete editor provenance. It is useful only as a qualitative example.
+10. A public OpenReview invitation previously stated deadline
+    14 November 2026 18:30 UTC = 15 November 2026 00:00 IST. Recheck directly;
+    do not confuse this with the main conference deadline or claim acceptance.
+    https://openreview.net/group?id=ICVGIP.in/2026/Workshop/FDDM
+
+NON-NEGOTIABLE DATA AND SCIENCE RULES
+-------------------------------------
+- Original camera photograph is NEVER input to the detector during evaluation.
+- Do not test on training data, reuse public viewer previews as final test,
+  select thresholds on test labels, or infer correctness from a 16-image run.
+- Keep all derivatives of one original scene in the same split when IDs are
+  available. Audit source overlap separately from generator overlap.
+- Do not assume a dataset's published splits are source-disjoint; verify.
+- Do not call a heatmap a ground-truth mask or a raw score an AI probability.
+- Keep requested edit masks, reviewed semantic-edit masks and pixel-difference
+  masks distinct. VAE processing/compression can change outside the edit region.
+- Preserve source/image permissions and record exact dataset and model licenses.
+- Do not overwrite existing data or silently accept licenses/terms on the user's
+  behalf. Continue with permissible alternatives if a source is blocked.
+- Do not download and run untrusted checkpoints as unrestricted pickles; favor
+  safetensors where supported. Use trusted official checkpoints and safe loading
+  supported by the framework; do not bypass security checks to force loading.
+- Never present a score calculated from an invalid mask/polarity/threshold as
+  a benchmark result. Report what is unknown and the exact step that failed.
+- No paper claim of SOTA, superiority or statistical significance without a
+  fair comparable protocol and supporting results. A baseline may fail.
+
+DELIVERABLE DIRECTORY — ISOLATE FROM OTHER AGENTS
+-------------------------------------------------
+Create ONLY new project outputs under:
+  I:\icvgip workshop\baseline_work\
+Suggested layout:
+  baseline_work\README_STATUS.txt
+  baseline_work\code\
+  baseline_work\configs\
+  baseline_work\data_manifests\
+  baseline_work\predictions\
+  baseline_work\reports\
+  baseline_work\logs\
+  baseline_work\env\                  (if needed)
+
+Existing data under research_data and baselines can be read. Use a separate
+venv and cache for your changes. Do not edit FDDM_Project_Reference.txt while
+another agent might be editing it; write your results into README_STATUS.txt.
+Do not delete, move or re-download over existing files. Resume interrupted runs
+from per-image output files and immutable manifests. Never mix results from
+model versions or data splits in the same output directory.
+
+STEP 1 — INVENTORY AND VERIFY THE ENVIRONMENT
+----------------------------------------------
+1. Open PowerShell. Run:
+   Set-Location -LiteralPath 'I:\icvgip workshop'
+   Test-Path -LiteralPath 'I:\icvgip workshop\FDDM_Project_Reference.txt'
+   Get-Content -LiteralPath 'I:\icvgip workshop\project_records\baseline_setup_notes.md'
+   nvidia-smi
+   & 'I:\icvgip workshop\baselines\vaas-env\Scripts\python.exe' -c "import sys,torch; print(sys.executable); print(torch.__version__); print(torch.cuda.is_available()); print(torch.cuda.get_device_name(0) if torch.cuda.is_available() else 'CPU')"
+2. Record UTC/IST date, OS, Python executable, GPU/driver, installed package
+   versions, free disk space and command exit codes in logs\environment.txt.
+3. If GPU is unavailable, use CPU for a one-image smoke check and report the
+   limitation. Do not assume Kaggle GPU access is currently active.
+4. If setting up a new environment, create it under baseline_work\env and pin
+   exact compatible versions based on the selected model's official docs. Record
+   pip freeze, system-package inheritance and CUDA driver versions. Keep the
+   known working VAAS environment unchanged. Do not upgrade global torch.
+
+STEP 2 — SELECT BASELINE MODELS AND RESOLVE ACCESS
+-------------------------------------------------
+A. Immediate diagnostic: VAAS, because an environment and weights exist.
+   Source/model: https://github.com/OBA-Research/VAAS
+                 https://huggingface.co/OBA-Research/vaas
+   Model is general image-integrity analysis, not a purpose-built AI editor
+   classifier. Treat it as one baseline, not the sole SOTA comparator.
+B. Research-relevant comparator: FUSED; official repository and checkpoints:
+   https://github.com/AntonNuzhdin/FUSED
+   https://huggingface.co/aonuzhdin/FUSED
+   Paper: https://arxiv.org/html/2608.28302v1
+   Verify checkpoint, model architecture, code and weight license, exact eval
+   scripts and GPU memory. The authors used two H100s for training; do not
+   assume that full retraining or inference fits on this 8 GiB card.
+   The official FUSED README describes 512 x 512 inputs with ImageNet
+   normalization, manifest rows [image_path, mask_path_or_null, subset], and
+   an inference example:
+     uv run python inference.py checkpoint=<checkpoint> input=<image> out_dir=<output>
+   Check the current README/config and installed tooling before using that
+   command. The checkpoint and frozen ConvNeXt weights may be separate.
+   Distinguish partial edits from entire-image generation; their masks and
+   scientific interpretations are different. Check licenses and avoid claiming
+   FUSED will fit in 8 GiB without measuring it.
+C. Also examine DeCLIP, TruFor and IFA-Net if permissible and available:
+   https://github.com/bit-ml/DeCLIP
+   https://github.com/grip-unina/TruFor
+   https://arxiv.org/abs/2602.18842
+   Record checkpoint availability, license, input/output and runtime. Do not
+   assume IFA-Net code or checkpoints are available without verification.
+D. Make a baseline_status table with: model, repository, commit, checkpoint
+   revision/hash, license, inputs, outputs, preprocessing, GPU memory, status,
+   and reason if blocked. Do not substitute general VAAS for an AI-inpainting
+   baseline without noting that difference.
+E. Score convention: use the EXACT installed version's source + official model
+   documentation. Verify which output and which direction means manipulated.
+   If documentation/code conflict remains, save both raw scores and a clear
+   blocker; do not choose a polarity by optimizing the test set. Do not modify
+   third-party model source silently. Document any explicit adapter.
+
+STEP 3 — DOWNLOAD / AUDIT RESEARCH DATA
+---------------------------------------
+A. Candidate primary dataset: OpenSDID, official source:
+   https://github.com/iamwangyabin/OpenSDI
+   Training: https://huggingface.co/datasets/nebula/OpenSDI_train
+   Test: https://huggingface.co/datasets/nebula/OpenSDI_test
+   Authors list CC BY-SA 4.0 and academic-use notice; verify applicability,
+   source-image terms, model licensing, and dataset access before use/release.
+B. Candidate independent external data (separate protocols):
+   https://github.com/IDLabMedia/tgif-dataset
+   https://github.com/shanface33/AutoSplice_Dataset
+   Verify each dataset's terms. AutoSplice author restrictions are relevant to
+   noncommercial academic research by educational institutions; do not assume
+   eligibility or redistribute without checking the source.
+C. Inspect dataset README, dataset card, feature schema, available splits,
+   licenses, image and mask encoding, expected size and required disk space.
+   Begin with a small documented sample from the official files/stream to audit;
+   avoid downloading entire datasets blindly. Do not use viewer thumbnails as
+   final benchmark inputs until their fidelity and mask encoding are verified.
+D. Establish a DEVELOPMENT/VALIDATION set from eligible training material and
+   separate TEST sets. For baseline comparison with FUSED use published splits
+   as reported and disclose them; also run a source-disjoint audit where possible.
+   Hold out unfamiliar generators separately. Record when source identity or
+   dataset provenance cannot be established; do not assert independence.
+E. Freeze manifests before evaluation. Minimum row fields:
+   sample_id, dataset, dataset_revision, source_id (or unknown), split,
+   generator, edit_type, image_path, mask_path (empty for genuine), label
+   (0=genuine, 1=edited), image_sha256, mask_sha256 (if present), width,
+   height, image_format, mask_format, source_url, license and notes.
+   Every relative path must resolve within the stated dataset root. Refuse
+   missing files, unexpected class labels, duplicate IDs, mismatched dimensions,
+   invalid images, identical hashes across splits, and known source overlap.
+   Unknown source identity is a disclosed limitation, not a verified pass.
+F. For masks, use AUTHORITATIVE DATASET DOCUMENTATION/code to determine edited
+   vs genuine pixels, hard vs soft edges, mask range, ignored pixels, and how
+   masks map to images. Inspect examples; use nearest-neighbor mask resizing.
+   Do not guess based on file color or choose a threshold from test outcomes.
+   Preserve original masks and document any conversion and alignment.
+G. Confirm tiny-edit count BEFORE making <2% claims. Compute fraction using
+   original verified ground-truth pixels divided by valid image pixels; report
+   bins <2%, 2–10%, >10%, with exact boundary conventions and counts.
+   Do not create an artificial tiny edit by scaling a mask independently.
+H. Use the 16 development viewer samples only for debugging. They are not a
+   representative evaluation set and must not be used to support paper claims.
+
+STEP 4 — IMPLEMENT A REPRODUCIBLE BASELINE RUNNER
+-------------------------------------------------
+1. Create a small baseline adapter interface under baseline_work\code, with
+   load_model(config) and predict(image). Predict receives a single image only.
+   Return raw image score (if provided) and raw native probability/logit map,
+   and identify output meaning, dimensions and interpolation. No target masks
+   should enter model inference or model selection.
+2. For each model, use the author's documented preprocessing and checkpoint.
+   Do not normalize outputs per-image unless that model's official protocol
+   requires it. Avoid assuming score = probability.
+3. Select CPU/GPU explicitly; use eval/no-grad; log model version and environment.
+   Save one raw map per image as float .npy and a CSV/JSON of score, runtime,
+   input hash, model/checkpoint ID, dataset ID, and any errors. Visualizations
+   are separate copies and never used as ground truth.
+4. Save config containing seed, threshold state, metric definitions, dataset
+   manifest hash, model/checkpoint hash, resize behavior and code revision.
+   Run output goes in a unique timestamped or named directory; fail instead of
+   overwriting an existing completed run. Do not download weights implicitly
+   from a different model revision without recording them.
+5. Try one known development image first, log actual command and output;
+   verify finite values, image dimensions, map shape and GPU memory. If it
+   fails, save error/traceback; resolve routine dependency issues in a local
+   environment. Never disable a security check or claim a model ran if not.
+6. After smoke check, run a balanced DEVELOPMENT subset (genuine/edited) and
+   review its logs and overlays. Do not report it as an independent benchmark.
+
+STEP 5 — VALIDATION, THRESHOLDS AND TEST
+-----------------------------------------
+1. Decide score direction and map polarity using documented model semantics or
+   documented validation analysis. If source conflicts cannot be resolved,
+   report raw values with ambiguity, and leave affected metrics NOT COMPUTED.
+   Never pick whichever direction looks better using held-out test labels.
+2. On validation data ONLY, define image score threshold and mask threshold.
+   Record selection rule, seed and thresholds in a locked JSON config. For
+   comparison to a published method, separately reproduce its stated fixed
+   threshold/protocol. Avoid per-image oracle thresholds or best test thresholds.
+3. After fixing all settings, run the held-out test without providing labels or
+   masks to the detector. No hyperparameter changes after examining test results.
+4. Image-level metrics: count TP, FP, TN, FN; accuracy, balanced accuracy,
+   precision, recall, F1, false positive rate and ROC-AUC, with score direction
+   stated. ROC-AUC requires both classes and meaningful continuous ordering.
+   Also report PR-AUC with class prevalence for imbalanced data, when applicable.
+5. Localization: per-image pixel IoU and pixel F1 for edited test images using
+   verified masks, fixed threshold and explicit nearest-neighbor preprocessing.
+   Report exact aggregation, zero-union policy, valid pixels and evaluated N.
+   Separate area bins <2%, 2–10%, >10%; include sample counts and report NA
+   when no samples. Include negative-image mask area/false positives separately.
+6. Confidence intervals: bootstrap at ORIGINAL-SOURCE level when source IDs are
+   available; document number of resamples and seed. If IDs are unavailable,
+   disclose the limitation; don't imply image-wise bootstrap removes dependence.
+7. Run the SAME manifest and locked metrics for all compared models; record
+   whether pretrained models saw related data, model input resolution, and
+   whether target-dataset fine-tuning occurred. Do not directly compare numbers
+   from different datasets, transformations or training protocols as a ranking.
+
+STEP 6 — QUALITY CHECKS AND OUTPUTS
+-----------------------------------
+Verify core evaluation code using small HAND-DEFINED examples with known labels:
+- Perfect predicted mask vs GT -> IoU=1 and F1=1.
+- Disjoint predicted and GT mask -> IoU=0 and F1=0.
+- Known 2x2 masks and simple image-level confusion matrix -> correct values.
+- Genuine image with no GT mask -> skipped from positive-only IoU and handled
+  in genuine false-positive analysis; define empty-mask policy explicitly.
+- Split source-id overlap and duplicate-hash checks reject constructed leakage.
+- Verify saved image/mask shapes, model raw output and resize mapping.
+- Test fixed-threshold use and ensure the evaluation path cannot change it.
+Document run commands and results. These are checks of evaluation correctness,
+not proof that the model is accurate. Do not execute destructive operations.
+
+Create these files, with actual values or explicit NOT AVAILABLE:
+  baseline_work\README_STATUS.txt       — what ran and remaining blockers
+  baseline_work\reports\baseline_report.txt
+  baseline_work\reports\metrics.json  — no invented values
+  baseline_work\reports\per_image.csv
+  baseline_work\reports\failure_cases\  — image/mask overlays as permitted
+  baseline_work\data_manifests\...      — provenance, split and hashes
+  baseline_work\logs\...                — commands, versions, traces
+  baseline_work\configs\...             — frozen evaluation configuration
+
+In baseline_report.txt include exact sample counts, edit-area distribution,
+training/test datasets, generator splits, label sources, model checkpoint,
+GPU/memory, run time, thresholds and definitions, raw results with uncertainty,
+known limitations, and whether a result is a smoke test, development run or
+independent test. For blocked steps use NOT RUN / BLOCKED with cause, not zeros.
+List all paper citations and licenses used. Do not modify original assets.
+
+FINAL MESSAGE TO THE USER
+--------------------------
+Give a short factual summary, link to baseline_report.txt and output folder,
+identify models and image counts, separate actual metrics from missing ones,
+state any blockers, and mention that results are ready for an EchoSeam-Net
+comparison only if the independent protocol and source audit really passed.
+If no valid test is possible, still deliver the scripts, manifests, logs and
+specific blocker so the user can review and continue. Never submit the paper or
+send messages on the user's behalf without the user's explicit instruction.
+
+END OF HANDOFF

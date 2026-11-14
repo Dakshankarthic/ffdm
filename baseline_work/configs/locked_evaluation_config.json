@@ -1,0 +1,16 @@
+{
+  "locked_timestamp": "2026-11-13T15:10:04Z",
+  "model_id": "OBA-Research/vaas:v2-base-df2023",
+  "validation_manifest_hash": "a9d3c6cba4c1c82af5aa54b3d874a23188f0637467293f3b1a89a420228812fd",
+  "random_seed": 42,
+  "score_direction": "lower_is_fake",
+  "score_direction_rationale": "Empirically verified on val_sd15 and in vaas 0.2.0 hybrid_score.py where S_P = 1.0 - mean(pred_sig) and S_F = exp(-delta/sigma). Both components output fidelity (normality) scores where real images score higher and anomalous/fake images score lower.",
+  "documented_polarity_conflict": "VAAS paper text (Section 4) describes S_F as an anomaly deviation (higher=anomalous), while vaas 0.2.0 code and model card calculate fidelity S_F=exp(-delta/sigma). We report raw scores and explicitly document this version divergence.",
+  "image_score_metric": "S_H",
+  "image_score_threshold": 0.7075,
+  "image_threshold_selection_rule": "Maximizes balanced accuracy on frozen validation set val_sd15 (grid search on validation only).",
+  "mask_threshold": 0.5,
+  "mask_threshold_selection_rule": "Standard sigmoid boundary 0.5 matching FUSED and standard segmentation literature.",
+  "mask_resize_interpolation": "PIL.Image.NEAREST",
+  "zero_union_policy": "If both GT and Pred empty -> IoU=1.0, F1=1.0. If one empty and one non-empty -> IoU=0.0, F1=0.0."
+}

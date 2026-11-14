@@ -1,0 +1,46 @@
+================================================================================
+CONTROLLED LOCALIZATION v1.1 — DATA GAPS AND INVENTORY REPORT
+================================================================================
+Workspace: I:\icvgip workshop\controlled_localization
+Date: 2026-11-13
+
+1. CURRENT DATA INVENTORY
+-------------------------
+A. research_data\opensdi_development_preview\
+   - 16 images (8 real, 8 fake) from nebula/OpenSDI_train (sd15).
+   - Nonrandom systematically spaced viewer-cached JPEGs.
+   - Status: Viewer-cached JPEGs; masks are JPEG encoded. These are exploratory training samples, NOT paired with canonical unedited photographs (A).
+
+B. open_photo_starter\
+   - 5 authentic camera photographs under CC0 / Public Domain / CC BY-SA licenses:
+     * 01_kitchen.jpg (4928x3264)
+     * 02_living_room.jpg (3600x2399)
+     * 03_park_bench.jpg (1290x846)
+     * 04_office_desk.jpg (3888x2592)
+     * 05_street_market.jpg (4608x3456)
+   - Status: Pristine camera photographs (eligible as canonical A candidates). No AI inpainting edits (C) or masks currently exist for these 5 scenes.
+
+C. baseline_work\data\
+   - 120 frozen OpenSDID evaluation samples (20 val_sd15, 100 test across SD1.5, SD2.1, SDXL, SD3, Flux.1).
+   - Status: FROZEN baseline evaluation assets. These do not include paired pristine originals (A) and cannot be modified or contaminated during controlled localization training.
+
+2. DATA GAPS IDENTIFIED
+-----------------------
+1. Primary Training Stratum Requirement:
+   - Specification Section 03 requires verified native_pixel_paste examples with preserved outside-mask pixels:
+     A = canonical unedited photograph
+     C = canonical AI-edited image (with localized edit and ground-truth mask)
+     B = recipe(A)
+     D = same recipe(C)
+   - Current Gap: Neither OpenSDID nor the existing previews provide the pristine camera original A paired with each partial inpainting C. In OpenSDID, partial inpainting masks are provided against Megalith-10M backgrounds, but the original Megalith-10M unedited counterpart is not present in the downloaded split without cross-referencing source IDs.
+
+2. Full-Frame Decode vs Native Pixel Paste:
+   - When an AI editor runs a full-frame VAE decode, the entire image (including outside the edit mask) receives diffusion generator noise/artifacts.
+   - Per specification Section 03: Full_frame_decode examples must disable outside-mask consistency (Loutside).
+
+3. Immediate Action Plan:
+   - Implement the full architecture, schema, tiling, and inference pipeline (Stage 1).
+   - Implement synthetic / controlled paired fixtures for rigorous contract and numerical testing.
+   - Construct verified paired controls using available pristine camera photos (from open_photo_starter) or by mining matched source pairs.
+================================================================================
+

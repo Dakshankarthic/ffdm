@@ -1,0 +1,14 @@
+{
+  "status": "PASS",
+  "variant": "T2",
+  "device": "cuda",
+  "steps": 60,
+  "groups_count": 8,
+  "total_train_runtime_seconds": 16.680508899968117,
+  "initial_loss": 1.1584649682044983,
+  "final_loss": 0.06622307747602463,
+  "loss_reduction_pct": 94.28354941292152,
+  "achieved_macro_iou": 0.921382592727485,
+  "detection_auroc": 1.0,
+  "checkpoint_path": "I:\\icvgip workshop\\controlled_localization\\runs\\overfit_check\\overfit_checkpoint.pt"
+}

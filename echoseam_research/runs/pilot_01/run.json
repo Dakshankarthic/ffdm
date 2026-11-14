@@ -1,0 +1,64 @@
+{
+  "args": {
+    "manifest": "echoseam_research/pilot_train.json",
+    "root": ".",
+    "output": "echoseam_research/runs/pilot_01",
+    "epochs": 12,
+    "size": 256,
+    "seed": 42,
+    "device": "cuda",
+    "confirm_mask_white_edited": true
+  },
+  "count": 16,
+  "history": [
+    {
+      "epoch": 1,
+      "mean_train_loss": 1.39822718501091
+    },
+    {
+      "epoch": 2,
+      "mean_train_loss": 1.3732195273041725
+    },
+    {
+      "epoch": 3,
+      "mean_train_loss": 1.3492277339100838
+    },
+    {
+      "epoch": 4,
+      "mean_train_loss": 1.3171150982379913
+    },
+    {
+      "epoch": 5,
+      "mean_train_loss": 1.284844882786274
+    },
+    {
+      "epoch": 6,
+      "mean_train_loss": 1.2484205141663551
+    },
+    {
+      "epoch": 7,
+      "mean_train_loss": 1.2085769325494766
+    },
+    {
+      "epoch": 8,
+      "mean_train_loss": 1.1755952686071396
+    },
+    {
+      "epoch": 9,
+      "mean_train_loss": 1.1380871534347534
+    },
+    {
+      "epoch": 10,
+      "mean_train_loss": 1.1142229363322258
+    },
+    {
+      "epoch": 11,
+      "mean_train_loss": 1.0961899012327194
+    },
+    {
+      "epoch": 12,
+      "mean_train_loss": 1.0843008570373058
+    }
+  ],
+  "warning": "Training loss only; no accuracy or localization performance measured."
+}

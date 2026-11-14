@@ -1,0 +1,255 @@
+{
+  "model_name": "Controlled Localization v1.1 (T2O)",
+  "checkpoint": "I:\\icvgip workshop\\controlled_localization\\runs\\scale_multigen_run\\best.pt",
+  "evaluation_timestamp": "2026-11-14T06:01:21Z",
+  "total_test_images": 100,
+  "total_runtime_seconds": 21.97,
+  "per_generator": {
+    "sd15": {
+      "num_total": 20,
+      "num_real": 10,
+      "num_fake": 10,
+      "detection": {
+        "roc_auc": 0.64,
+        "accuracy": 0.5,
+        "balanced_accuracy": 0.5
+      },
+      "localization": {
+        "mean_iou": 0.1783,
+        "iou_95_ci": [
+          0.039,
+          0.3449
+        ],
+        "mean_f1": 0.2419,
+        "f1_95_ci": [
+          0.0737,
+          0.4373
+        ],
+        "clean_image_false_alarm_mean_pct": 13.1574,
+        "tiers": {
+          "<2%": {
+            "n_samples": 1,
+            "mean_iou": 0.0036,
+            "mean_f1": 0.0073
+          },
+          "2-10%": {
+            "n_samples": 4,
+            "mean_iou": 0.0599,
+            "mean_f1": 0.1127
+          },
+          ">10%": {
+            "n_samples": 5,
+            "mean_iou": 0.308,
+            "mean_f1": 0.3921
+          }
+        }
+      }
+    },
+    "sd2": {
+      "num_total": 20,
+      "num_real": 10,
+      "num_fake": 10,
+      "detection": {
+        "roc_auc": 0.73,
+        "accuracy": 0.5,
+        "balanced_accuracy": 0.5
+      },
+      "localization": {
+        "mean_iou": 0.2689,
+        "iou_95_ci": [
+          0.1229,
+          0.4343
+        ],
+        "mean_f1": 0.3702,
+        "f1_95_ci": [
+          0.1967,
+          0.5507
+        ],
+        "clean_image_false_alarm_mean_pct": 16.1352,
+        "tiers": {
+          "<2%": {
+            "n_samples": 0,
+            "mean_iou": null,
+            "mean_f1": null
+          },
+          "2-10%": {
+            "n_samples": 4,
+            "mean_iou": 0.0856,
+            "mean_f1": 0.1505
+          },
+          ">10%": {
+            "n_samples": 6,
+            "mean_iou": 0.391,
+            "mean_f1": 0.5166
+          }
+        }
+      }
+    },
+    "sd3": {
+      "num_total": 20,
+      "num_real": 10,
+      "num_fake": 10,
+      "detection": {
+        "roc_auc": 0.7,
+        "accuracy": 0.5,
+        "balanced_accuracy": 0.5
+      },
+      "localization": {
+        "mean_iou": 0.1359,
+        "iou_95_ci": [
+          0.0474,
+          0.2406
+        ],
+        "mean_f1": 0.2112,
+        "f1_95_ci": [
+          0.0794,
+          0.3556
+        ],
+        "clean_image_false_alarm_mean_pct": 17.0898,
+        "tiers": {
+          "<2%": {
+            "n_samples": 1,
+            "mean_iou": 0.0,
+            "mean_f1": 0.0
+          },
+          "2-10%": {
+            "n_samples": 5,
+            "mean_iou": 0.0869,
+            "mean_f1": 0.1458
+          },
+          ">10%": {
+            "n_samples": 4,
+            "mean_iou": 0.2313,
+            "mean_f1": 0.3456
+          }
+        }
+      }
+    },
+    "sdxl": {
+      "num_total": 20,
+      "num_real": 10,
+      "num_fake": 10,
+      "detection": {
+        "roc_auc": 0.64,
+        "accuracy": 0.5,
+        "balanced_accuracy": 0.5
+      },
+      "localization": {
+        "mean_iou": 0.1214,
+        "iou_95_ci": [
+          0.0611,
+          0.2045
+        ],
+        "mean_f1": 0.1988,
+        "f1_95_ci": [
+          0.1089,
+          0.3105
+        ],
+        "clean_image_false_alarm_mean_pct": 11.8573,
+        "tiers": {
+          "<2%": {
+            "n_samples": 2,
+            "mean_iou": 0.0678,
+            "mean_f1": 0.1229
+          },
+          "2-10%": {
+            "n_samples": 4,
+            "mean_iou": 0.0554,
+            "mean_f1": 0.102
+          },
+          ">10%": {
+            "n_samples": 4,
+            "mean_iou": 0.2143,
+            "mean_f1": 0.3335
+          }
+        }
+      }
+    },
+    "flux": {
+      "num_total": 20,
+      "num_real": 10,
+      "num_fake": 10,
+      "detection": {
+        "roc_auc": 0.53,
+        "accuracy": 0.55,
+        "balanced_accuracy": 0.55
+      },
+      "localization": {
+        "mean_iou": 0.1337,
+        "iou_95_ci": [
+          0.0469,
+          0.2393
+        ],
+        "mean_f1": 0.2062,
+        "f1_95_ci": [
+          0.0808,
+          0.3462
+        ],
+        "clean_image_false_alarm_mean_pct": 15.2052,
+        "tiers": {
+          "<2%": {
+            "n_samples": 1,
+            "mean_iou": 0.0,
+            "mean_f1": 0.0
+          },
+          "2-10%": {
+            "n_samples": 4,
+            "mean_iou": 0.1128,
+            "mean_f1": 0.1804
+          },
+          ">10%": {
+            "n_samples": 5,
+            "mean_iou": 0.1772,
+            "mean_f1": 0.2681
+          }
+        }
+      }
+    }
+  },
+  "macro_average": {
+    "num_generators": 5,
+    "total_test_images": 100,
+    "total_real": 50,
+    "total_fake": 50,
+    "detection_accuracy": 0.51,
+    "detection_balanced_accuracy": 0.51,
+    "detection_f1": 0.6667,
+    "detection_roc_auc": 0.6404,
+    "localization_mean_iou": 0.1677,
+    "localization_iou_95_ci": [
+      0.1176,
+      0.2243
+    ],
+    "localization_mean_f1": 0.2456,
+    "localization_f1_95_ci": [
+      0.1821,
+      0.3147
+    ],
+    "clean_image_false_alarm_pct": 14.689,
+    "corpus_pixel_ap": 0.1492,
+    "aggregated_edit_tiers": {
+      "<2%": {
+        "sample_count": 5,
+        "mean_iou": 0.0279,
+        "mean_f1": 0.0506
+      },
+      "2-10%": {
+        "sample_count": 21,
+        "mean_iou": 0.0804,
+        "mean_f1": 0.1386
+      },
+      ">10%": {
+        "sample_count": 24,
+        "mean_iou": 0.2731,
+        "mean_f1": 0.3799
+      }
+    }
+  },
+  "baseline_comparison": {
+    "baseline_model": "OBA-Research/VAAS (v2-base-df2023)",
+    "vaas_macro_iou": 0.1633,
+    "vaas_tiny_edit_iou": 0.0095,
+    "vaas_clean_fp_pct": 16.5139,
+    "vaas_roc_auc": 0.442
+  }
+}

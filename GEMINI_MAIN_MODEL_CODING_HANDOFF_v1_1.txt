@@ -1,0 +1,571 @@
+GEMINI CODING HANDOFF: CONTROLLED LOCALIZATION v1.1
+Date: 2026-11-13 | Workspace: I:\icvgip workshop
+Deliverable: working research code, tests, audited data flow and actual runs.
+This file is the revised implementation specification, NOT a result report.
+
+======================================================================
+00. START HERE: TASK, AUTHORITY AND EXISTING WORK
+======================================================================
+Implement the NEW main model in I:\icvgip workshop\controlled_localization.
+This handoff assigns main-model coding to Gemini; the older
+BASELINE_HANDOFF_FOR_GEMINI.txt described a different, baseline-only assignment.
+Preserve baseline_work, baselines, echoseam_research, research_data and sites.
+Read applicable AGENTS.md files before making changes. Do not modify the
+website, overwrite historic checkpoints, or alter global Python packages.
+Continue implementation, checks and bounded development training without
+repeatedly asking permission for the work specified here. If an essential
+external asset is unavailable, record exactly what is missing and continue
+independent implementation. Do not invent assets, labels or measurements.
+
+Read these records:
+1. I:\icvgip workshop\FDDM_New_Research_Flow_and_Log.txt
+2. I:\icvgip workshop\project_records\controlled_localization_external_review_2026-11-13.txt
+3. I:\icvgip workshop\project_records\controlled_localization_review_audit_2026-11-13.txt
+
+The audits are review material. This v1.1 handoff resolves their contradictions.
+It supersedes conflicting implementation details in the v1 planning document.
+Historical pilot_01 belongs to the old EchoSeam prototype, NOT controlled
+localization v1. Do not relabel that run as a result for this method.
+No v1 preregistration or controlled-localization training has been verified.
+v1.1 denotes a revised design, not a claim of formal preregistration.
+
+Scientific question:
+Does matched control data plus directed consistency improve localization of
+small AI edits on unseen source images/editors at controlled false alarms?
+Deployment takes ONE image. Originals, masks and recipes are training/eval
+assets only. Do not turn reference subtraction into the deployed detector.
+Architecture components are established; novelty/performance are unverified.
+
+======================================================================
+01. AUDIT RESOLUTIONS: ACCEPT, CORRECT, OR TEST
+======================================================================
+F1 ACCEPT: exact stride wiring is specified below.
+F2 ACCEPT: fixed high-pass kernels are buffers, never optimizer parameters.
+F3 ACCEPT: RGB BatchNorm running statistics AND affine parameters frozen;
+           force eval after every train() call. New layers use GroupNorm.
+F4 ACCEPT FLOOR; TEST BLENDING: probability averaging is not inherently
+           wrong. Default probability blending; logit blending is an ablation.
+F5 ACCEPT: test top fractions and fixed-K scoring; neither is universally
+           scale-invariant. A 100x100 edit is 1.085% of 1280x720.
+F6 REVISE: directed detached-teacher Bernoulli KL with supervised loss on
+           every view; warm-up. No claim that this guarantees noncollapse.
+F7 RESOLVE: T1 versus T2 isolates consistency on IDENTICAL four-view data.
+           T0 versus T1 changes data; cannot isolate consistency. Match
+           image forwards/source groups and report time, not just steps.
+F8 REVISE: there is no universal dilation formula. Audit suggested formula
+           does not universally give 16px. Measure radii on train data only.
+F9 ACCEPT BUT LIMIT: common PNG export prevents additional export asymmetry;
+           it cannot erase previous JPEG/resampling/generator history.
+           Outside-mask AUC near 0.5 is diagnostic, not proof of no leakage.
+           Full-frame editor traces are a declared stratum, not automatically
+           an invalid sample to delete until an AUC test passes.
+F10 ACCEPT: record pipeline mode, inside/outside differences and no-op status.
+           Differences alone do not prove semantic change or correct masks.
+F11 ACCEPT: memory-bounded AP, validate histogram approximation against exact
+           AP. No universal bin count guarantees a 0.001 error bound.
+F12 QUALIFY: N >= 10/target_FPR is a planning heuristic, not a statistical
+           guarantee. Intervals and independent source counts are mandatory.
+
+Additional correction: classification against genuine/processed photographs
+alone does not establish AI specificity. Include conventional local edits as
+a separate challenge set. Until attribution is supported, label outputs
+"suspected local manipulation" with the AI-training scope documented.
+
+======================================================================
+02. MODEL VERSIONS AND COMPARISON CONTRACT
+======================================================================
+All main variants use ResNet-18 + fixed residual stem + small residual CNN
++ 64-channel FPN decoder. Same initialization, schedule and source sampling.
+Definitions for one verified source/edit group:
+A = canonical unedited photograph; C = canonical AI-edited image.
+B = recipe(A); D = SAME recipe(C). Masks A/B empty; C/D verified masks.
+
+T0: A,A,C,C with segmentation only. Duplicate forwards explicitly counted;
+    this is the no-processed-controls reference with matched forward count.
+T1: A,B,C,D with segmentation only.
+T2: EXACT T1 inputs/sampling + A->B and C->D directed view consistency.
+T2O: T2 + eligible outside-mask A->C and B->D consistency.
+T3: T2O + optional auxiliary processing classifier, enabled only after T2O.
+RGB_ONLY: T1 protocol, omit residual branch; separate architecture ablation.
+L1_ABLATION: T2 inputs but symmetric probability L1; optional legacy objective.
+
+Interpretation:
+T1-T0 measures processed-control exposure with matched image forwards.
+T2-T1 measures Lview with identical supervised examples.
+T2O-T2 measures Loutside only on eligible pairs.
+T3-T2O measures the auxiliary objective, not guaranteed disentanglement.
+T2-T0 changes BOTH supervision and data: report it as the combined method.
+
+Default final candidate F1 = best validated ResNet-18 variant.
+Optional F2 = same winning objective with ResNet-50 RGB backbone, update
+input projections for channels 256/512/1024/2048. Do not implement F2 before
+the compact comparison works. Bigger model is not automatically final.
+Final architecture/thresholds chosen on validation, never test feedback.
+
+======================================================================
+03. DATA CONTRACT AND PREPARATION ORDER
+======================================================================
+Manifest format: JSONL, one record per stored image/view. Paths resolve from
+an explicit --data-root; never rely on current working directory.
+Required fields:
+schema_version, sample_id, source_id, source_group_id, pair_group_id,
+split, view_role, image_path, mask_path, ignore_mask_path, label,
+manipulation_family, editor_name, editor_version, edit_type,
+compositing_mode, processing_recipe_id, recipe_parameters,
+width, height, mask_area_fraction, image_sha256, mask_sha256,
+source_dataset, license_or_usage_notes, mask_verified, status,
+geometry_verified, outside_pair_eligible, provenance_notes.
+Audit fields, nullable with explicit reason when no original is available:
+inside_mask_l1_diff, outside_mask_l1_diff, frac_changed_inside,
+change_threshold_tau, audit_decision_reason.
+
+Allowed manipulation_family: pristine, ai_local, conventional_local, unknown.
+Allowed compositing_mode: native_pixel_paste, full_frame_decode,
+posthoc_composite, unknown. Do not pretend unknown modes are known VAE use.
+Allowed status: verified, quarantined, unverified.
+Primary supervised AI study uses verified pristine and ai_local samples.
+Unknown/unverified samples are qualitative only, not silently treated as real.
+Conventional edits initially form a separately reported challenge set. Their
+regions are NOT relabelled empty in a general manipulation localization test.
+Any later AI-vs-conventional attribution task requires a separate task version.
+
+Order:
+1. Inventory existing data and licenses; preserve original bytes.
+2. Identify exact/near-duplicate scenes and assign source_group_id clusters.
+   Perceptual hashes flag candidates; they do not prove scene independence.
+3. Split groups before derivatives. Preserve previous development exposure;
+   never rename an inspected development set as independent final test.
+4. Decode/orient/color-convert consistently; retain conversion metadata.
+5. Create canonical A/C lossless PNG exports with common color/depth/geometry.
+6. Build B/D using exactly the same full-image recipe BEFORE cropping tiles.
+7. Audit masks/changes/background/encoding, quarantine uncertain cases.
+8. Freeze manifest hashes and a reproducible per-step tile schedule.
+
+Initial primary training stratum:
+Verified native_pixel_paste examples with preserved outside-mask pixels.
+Full_frame_decode examples are retained as a separately reported stress set;
+outside consistency is disabled on them. Do not posthoc composite them merely
+to pass an audit. If primary examples are unavailable, report the data gap;
+implement support and tests, but do not silently change the primary stratum.
+Posthoc composites require a labelled secondary experiment and seam controls.
+
+Canonicalization limits:
+Use identical final PNG export/color conversion for A/C; record original
+formats, editor output format and any decode/re-encode/resize history.
+When an editor changes dimensions, comparable baseline geometry requires a
+documented transform of A and masks. Unknown geometry -> quarantine paired
+consistency. No automatic registration that fabricates a ground-truth mask.
+PNG output does not remove inherited camera JPEG or editor compression traces.
+If ICC is known, convert to sRGB before removing metadata. If absent, record
+the assumed space. Strip metadata only after orientation/color interpretation.
+
+Recipe v1.1 primary set:
+Identity; JPEG quality 70/85/95 with fixed subsampling=4:2:0;
+Gaussian blur sigma 0.5 with explicitly recorded kernel/truncation.
+For T1-T3 choose recipes uniformly by seeded schedule; apply same recipe to
+A/C. Record Pillow/codec versions and supported encoder flags. Do not invent
+an unavailable DCT-mode API. Output may be stored as decoded lossless PNG
+provided recipe history is retained. Full-image processing preserves block
+phase; matched crop origins are mandatory. Multiples of 16 are optional
+sampling controls, not a requirement that overrides image coverage.
+Resize/crop consistency is OFF in the first experiment. Implement later only
+with verified transforms, mask mapping and surviving tiny regions.
+
+Mask and no-op audit:
+Check binary polarity, dimensions, source meaning and ignore zones.
+Store requested edit mask separately from any verified affected-area mask.
+Compute d(x)=mean_RGB(abs(C-A)) on aligned [0,1] canonical arrays.
+Compute inside/outside means and frac(d>tau) inside mask. Tau/decision limits
+come from train-only no-edit controls and inspection, not arbitrary labels.
+Quarantine exact/near no-op candidates for review; do not make faint edits
+vanish from the benchmark without reporting exclusion counts and reasons.
+Export visual contact sheets and counts by editor/recipe/size/status.
+
+Background audit:
+Compare encoding metadata and outside-region low-level statistics using
+source-group-held-out folds; report AUC and uncertainty for a simple probe.
+For native_pixel_paste, unexpected background changes trigger investigation.
+Mask geometry may itself leak labels: use identical sampled outside regions
+for paired A/C and avoid exporting mask shape as classifier input.
+For full_frame_decode, report background separability as a known property.
+Do not manipulate inclusion criteria to force AUC to exactly 0.5.
+
+======================================================================
+04. EXACT ARCHITECTURE AND TENSOR CONTRACT
+======================================================================
+Detector.forward(rgb) accepts float [B,3,H,W] in [0,1], no masks/recipes.
+Returns {mask_logits: [B,1,H,W], processing_logits: optional [B,R]}.
+Processing head absent/disabled for T0-T2O; metadata is never a model input.
+Primary training tile H=W=384. Support arbitrary inference image sizes by
+tiling/padding, not by forcing them through a distorted whole-image resize.
+
+RGB encoder:
+torchvision ResNet-18 with named pretrained weights saved in config/hash.
+Normalization mean (.485,.456,.406), std (.229,.224,.225), RGB branch only.
+384 input gives:
+stride 4: [B,64,96,96]; 8: [B,128,48,48];
+16: [B,256,24,24]; 32: [B,512,12,12].
+Freeze BN affine requires_grad and running stats. Override train(mode):
+super().train(mode); set every encoder BatchNorm2d.eval(); return self.
+Convolutions remain trainable. Forensic/decoder blocks use GroupNorm(8,C).
+Pretrained weights unavailable -> clear failure for research training;
+random initialization permitted only in explicitly labelled unit/smoke tests.
+
+High-pass stem:
+register_buffer('kernels', tensor of shape [9,1,3,3]); grouped conv groups=3.
+For each R/G/B channel apply these three exact 3x3 kernels:
+Dx = [[0,0,0],[-0.5,0,0.5],[0,0,0]]
+Dy = [[0,-0.5,0],[0,0,0],[0,0.5,0]]
+Lap = [[0,0.25,0],[0.25,-1,0.25],[0,0.25,0]]
+Use reflect padding for tiles (replicate fallback for tiny dimensions).
+Output order R_Dx,R_Dy,R_Lap,G_Dx,...,B_Lap. No abs/clipping by default.
+Residual encoder: four blocks, each Conv3x3 stride2 + GN + GELU followed by
+Conv3x3 stride1 + GN + GELU. Channels 32,64,96,128.
+Outputs: F2 [B,32,192,192], F4 [B,64,96,96],
+F8 [B,96,48,48], F16 [B,128,24,24].
+
+FPN decoder (all output widths 64; interpolation align_corners=False):
+proj(X) = Conv1x1 to 64 + GN + GELU, separate parameters per input.
+smooth(X) = Conv3x3 64->64 + GN + GELU.
+P32 = proj(R32).
+For s=16,8,4:
+  Ls = Conv1x1(Concat[proj(Rs),proj(Fs)]) from 128->64 + GN + GELU.
+  Ps = smooth(Ls + interpolate(P2s, size=Ls.shape[-2:])).
+P2 = Conv3x3(Concat[interpolate(P4,size=F2.shape[-2:]),proj(F2)])
+     from 128->64 + GN + GELU.
+mask_logits = interpolate(Conv1x1(P2,64->1), size=input H,W).
+Use target sizes, not assumptions about integer scale factors for odd inputs.
+T3 optional classifier: GAP(P16) -> Linear64->32 -> GELU -> Linear32->R.
+
+======================================================================
+05. LOSSES: PRECISE DEFINITIONS
+======================================================================
+valid = real unpadded pixel AND not ignore-region. Mask values 0/1.
+All reductions occur in float32, including when forward uses mixed precision.
+Each image-view has supervised Lseg. Average views, then source groups.
+
+Balanced BCE per image:
+positive_loss = mean(softplus(-z)) over valid positive pixels, if any.
+negative_loss = mean(softplus(z)) over valid negative pixels, if any.
+If both present: BCE = 0.5*(positive_loss+negative_loss).
+If one class present: use that class mean. If no valid pixels: skip and log.
+Dice only for images/tiles with positive valid pixels:
+1 - (2*sum(p*y)+1e-6)/(sum(p)+sum(y)+1e-6), valid pixels only.
+For empty-mask tiles Dice=0; retain BCE, do not reward empty prediction as
+perfect segmentation in the metrics. Lseg = BCE + Dice.
+
+Directed view consistency:
+q = sigmoid(z_clean).detach(), student z = z_degraded.
+KL(q||sigmoid(z)) = BCEWithLogits(z,q) - H(q).
+Compute teacher entropy with stable xlogy or clamped log probabilities.
+No gradient through q; student receives gradient p-q without differentiating
+the student sigmoid as a separate L1 multiplier. Small floating negatives
+may be tolerated numerically; verify nonnegative within tolerance.
+Reduce foreground and background separately, equally when both exist;
+background-only reduction for pristine pairs. Respect masks/valid pixels.
+Lview = mean of A->B and C->D. Both sides ALSO have supervised Lseg.
+Do not gate teacher pixels by confidence in v1.1; any later gating is an
+explicit ablation with its effect on supervision coverage reported.
+
+Outside consistency T2O:
+Same directed KL from A.detach()->C and B.detach()->D, outside dilated edit
+mask and ignore regions, only if outside_pair_eligible is true.
+Compute dilation on full-image mask before crop, preventing tile-edge errors.
+Mask negatives still receive ordinary segmentation supervision.
+Default debug radius 16 canonical pixels is PROVISIONAL, not a proven radius.
+Before research training, select recipe-specific radii from train-only
+distance-to-mask difference plots and no-edit controls; save calibration JSON.
+If no finite local exclusion isolates a comparable background, disable this
+pair for Loutside. Full-frame VAE traces cannot be fixed by arbitrary dilation.
+Keep radius fixed across variants and report eligible-pair coverage.
+
+Lprocessing T3: cross entropy for known recipe IDs, ignore unknown labels.
+Total loss = Lseg + ramp*0.1*Lview + ramp*0.1*Loutside + 0.05*Lprocessing,
+with absent terms exactly disabled by variant. ramp=min(1,step/500).
+Supervised warm-up is not evidence of a correct teacher; inspect outputs.
+Optional legacy L1 objective must be named and logged distinctly.
+
+======================================================================
+06. SAMPLER, OPTIMIZER AND COMPUTE PARITY
+======================================================================
+One optimizer update = 2 source/edit groups x 4 views = 8 tile forwards.
+Process one group (4 tiles) at a time, accumulate over two groups, dividing
+loss by two; do NOT divide again by eight after per-view/group averaging.
+If memory requires sequential views, use detached teacher outputs and
+backpropagate student losses carefully without retain_graph leaks. Test that
+accumulated gradients match the joint implementation within tolerance.
+Measure actual allocated/reserved memory; do not assume an audit VRAM estimate.
+
+Persist schedule.jsonl listing source group, edit ID, crop coordinates, recipe
+and transform seed for every step. Reuse it in T1/T2/T2O/T3.
+For each two-group step, use one edit-intersecting crop and one uniformly
+sampled crop (prefer verified background where available). A/B always have
+empty edit labels; C/D may be negative if crop misses the edit. Record actual
+positive/negative tile counts and full-image edit size separately.
+T0 uses corresponding A,A,C,C with the same origins and source sequence.
+Identical geometry transforms across all views; v1.1 starts without random
+geometric augmentation to simplify verification. Add flips only as a logged
+experiment, shared across variants.
+
+AdamW: RGB lr=1e-4, new layers lr=3e-4, weight_decay=1e-4.
+Initial pilot budget 5,000 optimizer steps; validate every 500.
+Linear LR warm-up 100 steps, then cosine decay to 0.1 times initial LR.
+AMP on compatible CUDA, gradient scaler, clip gradient norm at 1 after
+unscaling. No silent skipped NaN steps: log failures and halt to diagnose
+repeated nonfinite loss/gradients. Log occasional scaler overflow separately.
+Seeds 42 first; leading comparison repeats 123 and 2026.
+Seed Python/NumPy/torch/CUDA/workers and sampler. Record deterministic flags
+and any nondeterministic kernels; do not claim cross-hardware bit identity.
+Report forwards, groups, unique sources, optimizer steps and wall time.
+Extra losses have compute cost despite equal image forwards; report it.
+
+Checkpoint includes model, optimizer, scheduler, scaler, RNG, sampler cursor,
+full config, pretrained ID/hash, data hashes and code revision/hash.
+Resume must preserve step/sampler/ramp, not restart their schedule.
+Train in a new project-local environment; record exact dependencies after a
+successful compatibility smoke test. Reuse cached assets where appropriate,
+but do not silently inherit unrelated packages from the VAAS environment.
+
+======================================================================
+07. FULL-IMAGE INFERENCE AND DECISION RULES
+======================================================================
+Tile size 384, stride 256. Starts in each axis are sorted unique values from
+regular stride positions plus max(0,dimension-384); smaller images pad once.
+Use identical crop coordinates for matched training views. Never drop edges.
+Replicate padding for undersized images; ignore padding in losses/metrics.
+Full-image continuous output always matches decoded/oriented input H,W.
+
+Weight window W=max(outer(hann(384),hann(384)),1e-3), float32.
+Default: sum(W*sigmoid(tile_logits))/sum(W).
+Logit ablation: sigmoid(sum(W*tile_logits)/sum(W)).
+Strip padding and ensure weight_sum>0 at every real pixel. Tiling can create
+context artifacts; export seam diagnostics, not just attractive overlays.
+
+Score candidates on the merged probability map:
+mean top ceil(f*N) for f=.001,.005,.01,.02;
+mean top min(K,N) for K=2048,4096. At least one pixel in every pool.
+Primary debug defaults: probability blending, K=2048, mask threshold=.5.
+Debug defaults are NOT validation-selected operating points.
+
+Validation selection, two distinct thresholds:
+- t_mask: choose on development validation from .05,.10,...,.95 to maximize
+  macro edited-image IoU; tie -> higher threshold. Report tiny and all-edit
+  metrics plus genuine positive-pixel fraction. Do not set t_mask from image
+  score FPR, because these are different quantities.
+- t_image: score threshold for desired image FPR on a separate calibration
+  source split if data permit. Enumerate thresholds/ties deterministically;
+  decision is score>t_image. Choose most sensitive threshold satisfying the
+  empirical target on calibration negatives; include a reject-all option.
+- Choose pooling/blending on development validation before calibration.
+- If limited data force shared validation, disclose selection optimism and
+  keep final test independent. Tiny debug sets cannot certify low FPR.
+
+Freeze inference_policy.json with model hash, split hashes, blending, pooling,
+t_mask, t_image, score direction, target/observed calibration FPR and counts.
+Default full mask is not gated by image score; detection and localization
+metrics remain separate. Any gated product display must be separately labelled.
+
+Output per image: probability.npy or memory-mapped equivalent, mask.png,
+overlay.png, result.json with raw score/decision/policy hash/runtime/dimensions.
+No claim "AI probability 95%" without separately verified calibration.
+
+======================================================================
+08. METRICS, MEMORY AND STATISTICAL REPORTING
+======================================================================
+Mean per-edited-image IoU/F1 at frozen t_mask; pooled confusion totals separate.
+Bins by ORIGINAL full-image edit fraction: (0,.005), [.005,.02), [.02,.10),
+[.10,1]; aggregate tiny=(0,.02). Genuine images separate; empty bins N/A.
+Detection AUROC, average precision, sensitivity and actual FPR at t_image.
+Report conventional-edit outcomes separately; not binary pristine negatives.
+Report every relevant count by editor/recipe/source and task label definition.
+
+Use AP = sum(delta_recall * precision) as the primary PR summary, explicitly
+named average_precision. Do not label trapezoidal PR area as the same metric.
+For corpus pixel AP, stream int64 positive/negative histograms on logit-scale
+bins (initially 4096 edges spanning -20..20, plus overflow bins). Transform
+merged probabilities stably; account for p=0/1 and ties. Persist per-source
+histograms for source-group bootstrap; do not store all corpus pixels in RAM.
+Validate against exact sklearn AP on a train/development subset with sparse
+positives and high-confidence tails. Target absolute error <=.001 there;
+increase resolution or use exact external sorting if it fails. Record measured
+error and clipping/tail counts. Passing a subset check is not a universal bound.
+Compute macro edited-image AP one image at a time; use a labelled approximation
+if an individual image is too large. Genuine-only image AP is undefined/N/A.
+
+FPR planning:
+Aim for >=200 independent pristine calibration sources for 5%, >=1000 for 1%.
+These are heuristics, not guaranteed precision. With fewer, label operating
+points exploratory and report uncertainty instead of inventing confidence.
+At test, Wilson 95% intervals per recipe use one sample per independent source.
+If pooling correlated recipe variants, use source-group bootstrap instead of
+a binomial interval pretending each variant is independent.
+Use 2000 source-group bootstrap resamples for paired metric differences,
+keeping derivatives together; exclude undefined resamples and report count.
+Repeat seeds separately. Test FPR need not equal calibration FPR.
+
+Runtime: CUDA synchronization, warm-up, stated resolution/tile counts,
+time/image including preprocessing, peak allocated/reserved memory.
+
+======================================================================
+09. FILES AND MODULE RESPONSIBILITIES
+======================================================================
+Create under I:\icvgip workshop\controlled_localization:
+pyproject.toml; requirements-lock.txt; README.md; CHANGELOG.md
+configs/t0.yaml,t1.yaml,t2.yaml,t2o.yaml,t3.yaml,debug.yaml
+src/controlled_localization/__init__.py
+src/controlled_localization/data/{schema,canonicalize,audit,pairs,tiles}.py
+src/controlled_localization/models/{rgb_encoder,residual_encoder,decoder,detector}.py
+src/controlled_localization/losses/{segmentation,consistency}.py
+src/controlled_localization/{train,evaluate,infer,metrics,policy,utils}.py
+src/controlled_localization/{audit_data,build_controls,build_schedule,profile}.py
+tests/ (contract and meaningful numerical tests below)
+manifests/, runs/, reports/, notebooks/ (optional Kaggle launcher only)
+
+Schema validation must reject ambiguous masks/roles/splits and mismatched
+paired geometry. Model module cannot open manifests or original reference
+paths. Metrics/evaluation access masks outside the model forward path only.
+Keep filesystem operations inside supplied roots and use Path objects.
+Config rejects unknown keys; defaults resolve into a saved full config.
+Use atomic checkpoint/log writes where possible; unique run directories.
+
+CLI contract to implement (these are REQUIRED FUTURE interfaces, not commands
+already verified to exist):
+python -m controlled_localization.audit_data --manifest PATH --out DIR
+python -m controlled_localization.build_controls --manifest PATH --config PATH --out DIR
+python -m controlled_localization.build_schedule --manifest PATH --config PATH --out PATH
+python -m controlled_localization.profile --config PATH --out DIR
+python -m controlled_localization.train --config PATH --run-dir DIR
+python -m controlled_localization.train --config PATH --run-dir DIR --resume PATH
+python -m controlled_localization.evaluate --checkpoint PATH --manifest PATH --policy PATH --out DIR
+python -m controlled_localization.infer --checkpoint PATH --image PATH --policy PATH --out DIR
+
+Data root, schedule, train/validation manifests and policy paths live in
+validated config. Infer MUST NOT accept a ground-truth mask/original argument.
+Record exact PowerShell commands after implementing and running them. Include
+an actual Kaggle invocation with paths adapted to /kaggle/ only if tested.
+
+======================================================================
+10. REQUIRED TESTS AND ACCEPTANCE CONDITIONS
+======================================================================
+Architecture tests:
+- Assert every listed 384px feature shape and full-resolution output.
+- Frozen stem has zero parameters; buffer values unchanged after updates.
+- RGB BN affine/stats and num_batches_tracked unchanged after 50 train steps,
+  including repeated model.train() calls. Trainable convolutions get gradients.
+- Forensic/decoder normalization contains no accidentally trainable BN.
+- Checkpoint reload reproduces eval predictions within documented tolerance.
+
+Data/geometry tests:
+- Odd-sized, tiny and large synthetic images have complete tile coverage;
+  corners survive stitching; constant map merges to the same constant.
+- Paired coords/masks/ignore/valid regions align; orientation is applied once.
+- Derivatives cannot cross source_group splits; duplicate hashes are flagged.
+- Repeated recipe with same seed/version yields identical decoded pixels.
+- Unknown mask polarity, role mismatch and paired size mismatch fail clearly.
+
+Loss tests:
+- All-negative, all-positive, tiny positive and all-ignore inputs are finite;
+  all-ignore skipped consistently, with no divide-by-zero.
+- Detached consistency teacher has no consistency gradient; student does.
+  Clean view still receives gradient from its supervised segmentation loss.
+- Identical predictions yield near-zero KL; extreme logits remain finite.
+- Outside-ignore pixels contribute no outside-loss gradient; full-frame pairs
+  are excluded; dilation works across crop boundaries.
+- Accumulation matches joint-batch update within tolerance on a small fixture.
+
+Metric tests:
+- Hand-computed confusion cases; empty-genuine convention; tied scores.
+- Exact AP reference versus streaming AP, including sparse positives/tails.
+- Image threshold ties respect score>threshold and empirical FPR constraint.
+- Fractional/fixed-K pooling works for images smaller than K.
+- Histogram/group bootstrap keeps derivatives together.
+
+Execution checks:
+- Synthetic CPU forward/backward/reload is only a software smoke test.
+- GPU memory/time profile is measured, saved and associated with config.
+- Overfit 8-16 VERIFIED training groups, inspecting raw maps and metrics.
+  If learning fails, diagnose polarity, sampling, gradients and loss before
+  expensive pilots. Do not prescribe a fake achieved IoU target in advance.
+- Clean single-image infer invocation works with ONLY checkpoint/image/policy.
+- Resume test preserves schedule cursor and does not repeat/skip data silently.
+
+======================================================================
+11. EXECUTION ORDER AND EXPECTED DELIVERABLES
+======================================================================
+Stage 0: inventory and environment
+Create reports/inventory.json, reports/environment.txt and data_gaps.txt.
+Read existing manifests without assuming viewer masks are verified.
+
+Stage 1: implement architecture, schema, tiling and inference
+Run meaningful tests; save test report and a clearly labelled synthetic demo.
+Do not wait for large dataset acquisition to implement independent modules.
+
+Stage 2: canonicalization, split audit and matched controls
+Produce audit_report.json, contact sheets, exclusion table, background probe,
+calibration metadata and verified manifests. If data inadequate, give exact
+counts/requirements; continue coding, do not substitute unverified labels.
+
+Stage 3: training/losses/checkpoint/metrics
+Pass numerical/gradient/metric tests; profile GPU; run verified overfit check.
+Implement T0/T1/T2 first. T2O depends on background/radius audit. T3 is optional.
+
+Stage 4: bounded development experiment
+Run first seed T1 and T2 using exact same schedule; T0 provides data-control
+comparison. Use the budget above only once checks pass. Save intermediate
+validation outputs and learning curves. Do not claim success from loss alone.
+Run T2O only with measured eligibility; log skips and coverage.
+
+Stage 5: evidence and next decision
+Generate a table from actual saved outputs, not handwritten scores. Repeat
+promising comparisons across seeds; report negative or inconclusive findings.
+Do not use final-test feedback to choose model/thresholds. Final benchmark
+execution follows policy freeze; until then finish development deliverables.
+
+Every run saves:
+config.yaml, command.txt, environment.txt, code/data hashes, schedule hash,
+train_log.jsonl, checkpoints, raw maps, overlays, per_image_predictions.csv,
+validation_metrics.json, timing.json, failures.txt, run_summary.txt.
+Logs include each loss, gradient/scaler diagnostics, valid/positive pixel
+counts, view/source counts, LR, memory, elapsed time and sampler position.
+Save maps from negatives and failures, not only selected successful images.
+
+Final Gemini hand-back:
+GEMINI_IMPLEMENTATION_REPORT.txt with
+(a) implemented modules and paths;
+(b) exact commands run and exit status;
+(c) test results and measured hardware use;
+(d) data verification status/counts;
+(e) actual training/eval run IDs and output links;
+(f) unsupported/missing requirements and why;
+(g) conclusions supported by evidence and next action.
+Update STATUS.txt at milestones: implementation, data, training and results
+are separate statuses. Keep an append-only EXPERIMENT_LOG.txt.
+Do not say "trained model ready" because a synthetic checkpoint was saved.
+
+======================================================================
+12. SOURCES AND IMPLEMENTATION REFERENCE
+======================================================================
+Supplied audit copies are preserved under project_records; conclusions in
+this handoff distinguish accepted fixes from unverified suggestions.
+Official documentation checked while preparing this handoff:
+https://docs.pytorch.org/docs/stable/generated/torch.nn.BatchNorm2d.html
+BatchNorm has separate affine parameters and running statistics; freezing
+parameters alone does not freeze training-time running-stat updates.
+https://docs.pytorch.org/docs/stable/generated/torch.nn.functional.binary_cross_entropy_with_logits.html
+Use stable logits-based binary cross entropy with soft teacher targets.
+https://scikit-learn.org/stable/modules/generated/sklearn.metrics.average_precision_score.html
+Average precision is a recall-increment-weighted precision sum, distinct from
+trapezoidal integration. Pin the locally tested library versions; online docs
+are reference material, not an instruction to install the newest release.
+
+Research references and novelty limitations remain in the full flow document:
+INP-X https://arxiv.org/abs/2602.00192
+FUSED https://arxiv.org/abs/2608.28302
+GAP-SAM https://arxiv.org/abs/2608.20929
+IFA-Net https://arxiv.org/abs/2602.18842
+TruFor https://openaccess.thecvf.com/content/CVPR2023/html/Guillaro_TruFor_Leveraging_All-Round_Clues_for_Trustworthy_Image_Forgery_Detection_and_CVPR_2023_paper.html
+
+STATUS AT HANDOFF CREATION:
+Audits read and preserved; v1.1 specification written.
+New model code/training/results have NOT been created by this document task.
+END OF CODING HANDOFF.

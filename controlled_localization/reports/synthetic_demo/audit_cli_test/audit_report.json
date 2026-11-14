@@ -1,0 +1,32 @@
+{
+  "total_records": 4,
+  "verified_count": 4,
+  "quarantined_count": 0,
+  "tau": 0.02,
+  "results": [
+    {
+      "sample_id": "synth_00",
+      "status": "verified",
+      "mask_fraction": 0.0,
+      "reason": "Genuine unedited sample with no mask"
+    },
+    {
+      "sample_id": "synth_01",
+      "status": "verified",
+      "mask_fraction": 0.0,
+      "reason": "Genuine unedited sample with no mask"
+    },
+    {
+      "sample_id": "synth_02",
+      "status": "verified",
+      "mask_fraction": 0.0095367431640625,
+      "reason": "Standalone mask validated"
+    },
+    {
+      "sample_id": "synth_03",
+      "status": "verified",
+      "mask_fraction": 0.0095367431640625,
+      "reason": "Standalone mask validated"
+    }
+  ]
+}

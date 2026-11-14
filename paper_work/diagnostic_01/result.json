@@ -1,0 +1,17 @@
+{
+  "image": "I:\\icvgip workshop\\research_data\\opensdi_viewer_preview\\row_0000_image.jpg",
+  "source": "OpenSDI_train sd15 row 0; diagnostic only",
+  "model": "OBA-Research/vaas",
+  "torch": "2.6.0+cu124",
+  "device": "cuda",
+  "scores": {
+    "S_F": 0.9552505444901855,
+    "S_P": 0.7960086166858673,
+    "S_H": 0.8756295805880264
+  },
+  "anomaly_map_shape": [
+    224,
+    224
+  ],
+  "warning": "Model outputs are not validated AI-edit probabilities; no performance conclusion."
+}

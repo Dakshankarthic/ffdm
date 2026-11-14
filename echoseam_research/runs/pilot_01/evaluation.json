@@ -1,0 +1,6 @@
+{
+  "n": 20,
+  "accuracy_at_0_5": 0.5,
+  "mean_edited_iou_at_0_5": 0.0,
+  "scope": "Development pilot. Viewer assets, bright-mask assumption, 256x256 metrics. No formal test result."
+}
