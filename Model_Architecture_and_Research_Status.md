@@ -198,15 +198,18 @@ Accuracy below is average image-level detection accuracy across five OpenSDID ge
 | FUSED | arXiv preprint, 2026; conference/journal publication not verified | 89.5 |
 | MaskCLIP | CVPR 2025, OpenSDI paper | 82.0 |
 | RINE | ECCV 2024 | 80.3 |
+| PSCC-Net | IEEE TCSVT 2022 | 76.8 |
 | NPR | CVPR 2024 | 76.4 |
 | CAT-Net | IJCV 2022, journal version cited in the benchmark | 76.2 |
 | UniFD | CVPR 2023 | 75.7 |
+| MVSS-Net | IEEE TPAMI, online 2022 | 75.1 |
 | DeCLIP | WACV 2025 | 73.1 |
 | GramNet | CVPR 2020 | 72.3 |
 | CNNDetection | CVPR 2020 | 70.9 |
 | TruFor | CVPR 2023 | 69.8 |
 | ObjectFormer | CVPR 2022 | 66.3 |
 | FreqNet | AAAI 2024 | 66.3 |
+| IML-ViT | arXiv 2023; venue unverified for this paper | 56.4 |
 
 Venue references: [FUSED record](https://arxiv.org/abs/2608.28302), [MaskCLIP/OpenSDI proceedings](https://openaccess.thecvf.com/content/CVPR2025/html/Wang_OpenSDI_Spotting_Diffusion-Generated_Images_in_the_Open_World_CVPR_2025_paper.html), [RINE proceedings](https://www.ecva.net/papers/eccv_2024/papers_ECCV/html/9160_ECCV_2024_paper.php), [DeCLIP proceedings](https://openaccess.thecvf.com/content/WACV2025/html/Smeu_DeCLIP_Decoding_CLIP_Representations_for_Deepfake_Localization_WACV_2025_paper.html). Other venue details follow the cited method references in the FUSED bibliography. Publication status checked on 14 November 2026.
 
