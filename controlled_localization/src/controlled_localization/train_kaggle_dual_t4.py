@@ -1,7 +1,7 @@
 """Kaggle Dual-T4 12-Hour High-Throughput Training Script.
 Optimized for 2x NVIDIA Tesla T4 (32 GB total VRAM) on Kaggle:
-- Supports DataParallel / DDP across both T4 GPUs.
-- Auto-extracts balanced 10,000-image dataset (5,000 genuine, 5,000 inpainting) from OpenSDIDplus & OpenSDI.
+- Uses DataParallel across available GPUs; batch size is global.
+- Requires a prepared, validated manifest and attached image/mask data.
 - Joint dual-view training (whole-image view + native-resolution crop).
 - Mixed precision FP16 with GradScaler.
 - Periodic validation checkpointing on Balanced Accuracy.
@@ -81,7 +81,10 @@ class KaggleDualViewDataset(Dataset):
                 m_arr = np.array(m_pil.convert("L"), dtype=np.float32)
                 mask_arr = (m_arr > 127.5).astype(np.float32)
         else:
+            if img_label == 1.0: raise ValueError(f"Missing positive mask: {sid}")
             mask_arr = np.zeros((h, w), dtype=np.float32)
+        if mask_arr.shape != (h,w) or (img_label == 1.0 and not mask_arr.any()):
+            raise ValueError(f"Invalid mask: {sid}")
 
         th, tw = self.view_size, self.view_size
 
@@ -205,8 +208,6 @@ def evaluate_validation_metrics(
 
         # Native Tiles
         coords = get_tile_grid_coords(w, h, tile_size=tile_size, stride=256)
-        if len(coords) > 4:
-            coords = [coords[0], coords[len(coords) // 3], coords[2 * len(coords) // 3], coords[-1]]
 
         tile_logits = []
         for x, y in coords:
@@ -238,7 +239,9 @@ def evaluate_validation_metrics(
     best_tau = 0.5
     best_acc = 0.0
     best_f1 = 0.0
-    for tau in np.linspace(0.05, 0.95, 91):
+    candidates = np.unique(np.asarray(whole_scores, dtype=float))
+    candidates = np.r_[0.0, (candidates[:-1]+candidates[1:])/2, 1.0]
+    for tau in candidates:
         preds = [1 if s >= tau else 0 for s in whole_scores]
         bacc = balanced_accuracy_score(labels, preds)
         if bacc > best_bacc:
@@ -264,7 +267,11 @@ def evaluate_validation_metrics(
     }
 
 
-def train_kaggle(steps: int = 15000, batch_size: int = 16, val_interval: int = 500) -> None:
+def train_kaggle(steps=15000, batch_size=4, val_interval=500, manifest_path=None, output_dir=None, resume=None, max_hours=9.5, save_interval=100, initialize=None):
+    global OUTPUT_DIR
+    if output_dir: OUTPUT_DIR = Path(output_dir)
+    if not torch.cuda.is_available(): raise RuntimeError("CUDA GPU required")
+    if batch_size < 2 or batch_size % 2: raise ValueError("Global batch size must be even and >=2")
     seed_all(42)
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     num_gpus = torch.cuda.device_count()
@@ -273,10 +280,7 @@ def train_kaggle(steps: int = 15000, batch_size: int = 16, val_interval: int = 5
     OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
     RUNS_DIR.mkdir(parents=True, exist_ok=True)
 
-    manifest_p = ROOT / "controlled_localization/runs/scaled_pilot/manifest_scaled.json"
-    if not manifest_p.exists():
-        manifest_p = ROOT / "controlled_localization/runs/real_development_20261114/manifest_multigen.json"
-
+    manifest_p = Path(manifest_path)
     with open(manifest_p, "r", encoding="utf-8") as f:
         manifest = json.load(f)
 
@@ -287,21 +291,23 @@ def train_kaggle(steps: int = 15000, batch_size: int = 16, val_interval: int = 5
 
     train_ds = KaggleDualViewDataset(train_recs, view_size=384, is_train=True)
     batch_sampler = BalancedKaggleSampler(train_recs, batch_size=batch_size)
+    if len(batch_sampler) == 0: raise ValueError("Not enough examples of each class for the batch size")
     train_loader = DataLoader(train_ds, batch_sampler=batch_sampler, num_workers=2, pin_memory=True)
 
     # Instantiate Model
     model = SuperFRAMEV2Detector(pretrained=True).to(device)
 
     # Optional local checkpoint init
-    local_ckpt = ROOT / "controlled_localization/runs/super_frame_v2_run/best.pt"
-    if local_ckpt.exists():
+    local_ckpt = Path(initialize) if initialize else None
+    if local_ckpt is not None:
+        if not local_ckpt.is_file(): raise FileNotFoundError(local_ckpt)
         sd = torch.load(local_ckpt, map_location=device, weights_only=False)
-        model.load_state_dict(sd.get("model_state_dict", sd), strict=False)
+        model.load_state_dict(sd.get("model_state_dict", sd), strict=True)
         print("Initialized weights from base checkpoint.")
 
     # Wrap in DataParallel if 2 GPUs available
     if num_gpus > 1:
-        print(f"Wrapping model in DataParallel across {num_gpus} GPUs (Batch Size: {batch_size * num_gpus})...")
+        print(f"Wrapping model in DataParallel across {num_gpus} GPUs (Batch Size: {batch_size})...")
         model = nn.DataParallel(model)
 
     raw_model = model.module if isinstance(model, nn.DataParallel) else model
@@ -323,7 +329,7 @@ def train_kaggle(steps: int = 15000, batch_size: int = 16, val_interval: int = 5
         ],
         weight_decay=1e-4,
     )
-    scaler = torch.amp.GradScaler("cuda")
+    scaler = torch.amp.GradScaler("cuda", init_scale=1024.0)
     scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(optimizer, T_max=steps, eta_min=1e-6)
 
     best_bacc = -1.0
@@ -331,8 +337,31 @@ def train_kaggle(steps: int = 15000, batch_size: int = 16, val_interval: int = 5
     train_iter = iter(train_loader)
     optimizer.zero_grad()
 
+    start_step = 1
+    latest_p = OUTPUT_DIR / "latest_resume.pt"
+    def save_resume(step):
+        temporary = latest_p.with_suffix('.tmp')
+        torch.save(dict(step=step, model_state_dict=raw_model.state_dict(),
+            optimizer=optimizer.state_dict(), scheduler=scheduler.state_dict(), scaler=scaler.state_dict(),
+            best_bacc=best_bacc, steps=steps, batch_size=batch_size,
+            manifest_sha256=hashlib.sha256(manifest_p.read_bytes()).hexdigest()), temporary)
+        temporary.replace(latest_p)
+    if resume:
+        state = torch.load(resume, map_location=device, weights_only=False)
+        if state['steps'] != steps or state['batch_size'] != batch_size:
+            raise ValueError('Resume requires identical steps and batch size')
+        if state['manifest_sha256'] != hashlib.sha256(manifest_p.read_bytes()).hexdigest():
+            raise ValueError('Resume manifest changed')
+        raw_model.load_state_dict(state['model_state_dict'], strict=True)
+        optimizer.load_state_dict(state['optimizer']); scheduler.load_state_dict(state['scheduler'])
+        scaler.load_state_dict(state['scaler']); best_bacc = state['best_bacc']; start_step=state['step']+1
+        if not best_ckpt_p.exists(): raise FileNotFoundError('Restore best checkpoint into output directory before resume')
     t0 = time.time()
-    for step in range(1, steps + 1):
+    for step in range(start_step, steps + 1):
+        if time.time()-t0 >= max_hours*3600:
+            save_resume(step-1)
+            print('Time budget reached; resumable checkpoint saved.')
+            break
         model.train()
         try:
             whole_t, crop_t, crop_mask_t, img_labels, crop_labels, _ = next(train_iter)
@@ -378,10 +407,12 @@ def train_kaggle(steps: int = 15000, batch_size: int = 16, val_interval: int = 5
         scaler.scale(total_loss).backward()
         scaler.unscale_(optimizer)
         torch.nn.utils.clip_grad_norm_(raw_model.parameters(), max_norm=1.0)
+        previous_scale = scaler.get_scale()
         scaler.step(optimizer)
         scaler.update()
         optimizer.zero_grad()
-        scheduler.step()
+        if scaler.get_scale() >= previous_scale:
+            scheduler.step()
 
         if step % 50 == 0 or step == steps:
             print(
@@ -390,7 +421,7 @@ def train_kaggle(steps: int = 15000, batch_size: int = 16, val_interval: int = 5
                 f"| Elapsed: {(time.time()-t0)/60:.1f}m"
             )
 
-        if step % val_interval == 0 or step == steps:
+        if step == start_step or step % val_interval == 0 or step == steps:
             val_res = evaluate_validation_metrics(raw_model, val_recs, device)
             print(f"  --> [Validation @ {step}] B-Acc: {val_res['val_balanced_acc']}% | Acc: {val_res['val_acc']}% | F1: {val_res['val_f1']}% | AUROC: {val_res['val_auroc']}% | IoU: {val_res['val_iou']}%")
 
@@ -406,13 +437,22 @@ def train_kaggle(steps: int = 15000, batch_size: int = 16, val_interval: int = 5
                 )
                 print(f"  *** New Best Kaggle Checkpoint Saved! (B-Acc: {best_bacc}%) ***")
 
+        if step == start_step or step % save_interval == 0 or step % val_interval == 0 or step == steps:
+            save_resume(step)
+
     print(f"\nKaggle Training Finished. Best Checkpoint saved to: {best_ckpt_p}")
 
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("--steps", type=int, default=15000)
-    parser.add_argument("--batch_size", type=int, default=16)
+    parser.add_argument("--batch_size", type=int, default=4)
     parser.add_argument("--val_interval", type=int, default=500)
+    parser.add_argument('--manifest', required=True)
+    parser.add_argument('--output-dir', required=True)
+    parser.add_argument('--resume')
+    parser.add_argument('--initialize')
+    parser.add_argument('--max-hours', type=float, default=9.5)
     args = parser.parse_args()
-    train_kaggle(steps=args.steps, batch_size=args.batch_size, val_interval=args.val_interval)
+    if args.steps < 1 or args.val_interval < 1 or args.max_hours <= 0: parser.error('Positive steps, validation interval and hours required')
+    train_kaggle(steps=args.steps, batch_size=args.batch_size, val_interval=args.val_interval, manifest_path=args.manifest, output_dir=args.output_dir, resume=args.resume, max_hours=args.max_hours, initialize=args.initialize)

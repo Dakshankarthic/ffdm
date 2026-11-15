@@ -32,7 +32,7 @@ class FrozenDINOv2Encoder(nn.Module):
         self.arch_name = arch_name
 
         if pretrained:
-            self.model = torch.hub.load("facebookresearch/dinov2", arch_name)
+            self.model = torch.hub.load("facebookresearch/dinov2", arch_name, trust_repo=True)
         else:
             raise ValueError("DINOv2 must be initialized with pretrained weights")
 

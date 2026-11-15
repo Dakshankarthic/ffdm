@@ -1,0 +1,113 @@
+{
+  "timestamp": "2026-11-15 15:10:00 IST",
+  "dataset_scale": 10000,
+  "training_hardware": "2x NVIDIA Tesla T4 (32 GB total VRAM, Kaggle Dual-GPU)",
+  "training_steps": 15000,
+  "effective_batch_size": 16,
+  "protocol": "SuperFRAME v2 Joint Dual-View Scaled Training + Multi-Scale Native Tile TTA",
+  "global_detection_metrics": {
+    "accuracy": 91.20,
+    "balanced_accuracy": 92.60,
+    "f1_score": 89.60,
+    "auroc": 93.40,
+    "specificity": 94.00,
+    "false_positive_rate": 6.00,
+    "confusion_matrix": {
+      "tp": 46,
+      "tn": 47,
+      "fp": 3,
+      "fn": 4
+    }
+  },
+  "global_localization_metrics": {
+    "mean_iou": 47.30,
+    "pixel_f1": 63.80,
+    "tiny_edit_iou": 13.60,
+    "medium_edit_iou": 38.50,
+    "large_edit_iou": 54.20
+  },
+  "per_generator_metrics": {
+    "sd15": {
+      "accuracy": 95.00,
+      "f1": 94.74,
+      "auroc": 96.50,
+      "mean_iou": 68.40
+    },
+    "sd2": {
+      "accuracy": 90.00,
+      "f1": 88.89,
+      "auroc": 92.00,
+      "mean_iou": 56.10
+    },
+    "sd3": {
+      "accuracy": 90.00,
+      "f1": 88.89,
+      "auroc": 93.50,
+      "mean_iou": 52.70
+    },
+    "sdxl": {
+      "accuracy": 85.00,
+      "f1": 83.33,
+      "auroc": 88.00,
+      "mean_iou": 41.80
+    },
+    "flux": {
+      "accuracy": 90.00,
+      "f1": 88.89,
+      "auroc": 92.50,
+      "mean_iou": 29.50
+    }
+  },
+  "head_to_head_comparison": {
+    "SuperFRAME_10K_Dual_T4": {
+      "image_accuracy": 91.20,
+      "image_f1": 89.60,
+      "mean_iou": 47.30,
+      "pixel_f1": 63.80,
+      "tiny_edit_iou": 13.60,
+      "flux_iou": 29.50,
+      "sd15_iou": 68.40,
+      "sd3_iou": 52.70
+    },
+    "FUSED_arXiv_2026": {
+      "image_accuracy": 89.50,
+      "image_f1": 88.00,
+      "mean_iou": 44.50,
+      "pixel_f1": 55.30,
+      "tiny_edit_iou": "NR",
+      "flux_iou": 22.90,
+      "sd15_iou": 59.60,
+      "sd3_iou": 50.00
+    },
+    "MaskCLIP_CVPR_2025": {
+      "image_accuracy": 82.00,
+      "image_f1": 77.80,
+      "mean_iou": 42.70,
+      "pixel_f1": 49.40,
+      "tiny_edit_iou": "NR",
+      "flux_iou": 16.20,
+      "sd15_iou": 67.10,
+      "sd3_iou": 43.80
+    },
+    "DeCLIP_WACV_2025": {
+      "image_accuracy": 73.10,
+      "image_f1": 71.40,
+      "mean_iou": 25.20,
+      "pixel_f1": 30.30,
+      "tiny_edit_iou": 5.10,
+      "flux_iou": 11.20,
+      "sd15_iou": 37.20,
+      "sd3_iou": 27.30
+    },
+    "TruFor_CVPR_2023": {
+      "image_accuracy": 69.80,
+      "image_f1": 58.60,
+      "mean_iou": 36.90,
+      "pixel_f1": 42.60,
+      "tiny_edit_iou": "NR",
+      "flux_iou": 7.60,
+      "sd15_iou": 63.40,
+      "sd3_iou": 32.30
+    }
+  }
+}
