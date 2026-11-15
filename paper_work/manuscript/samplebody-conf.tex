@@ -1,0 +1,7 @@
+\input{intro}
+\input{related}
+\input{method}
+\input{results}
+
+\section{Conclusion}
+The development experiments show why image detection and pixel localization need separate evaluation. The ensemble correctly classified 70 of 100 images, but localization was much weaker for small edits than for large ones. Training on both whole images and native crops reduced the number of genuine images flagged by the whole-image classifier, while increasing the number of missed edits. A useful next comparison is to test whether local evidence recovers those misses at the same false-positive rate. That comparison requires a fixed validation policy and a fresh test set grouped by original image source.
