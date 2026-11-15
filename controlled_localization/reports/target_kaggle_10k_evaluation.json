@@ -4,7 +4,7 @@
   "training_hardware": "2x NVIDIA Tesla T4 (32 GB total VRAM, Kaggle Dual-GPU)",
   "training_steps": 15000,
   "effective_batch_size": 16,
-  "protocol": "SuperFRAME v2 Joint Dual-View Scaled Training + Multi-Scale Native Tile TTA",
+  "protocol": "FRAME v2 Joint Dual-View Scaled Training + Multi-Scale Native Tile TTA",
   "global_detection_metrics": {
     "accuracy": 91.20,
     "balanced_accuracy": 92.60,
@@ -59,7 +59,7 @@
     }
   },
   "head_to_head_comparison": {
-    "SuperFRAME_10K_Dual_T4": {
+    "FRAME_10K_Dual_T4": {
       "image_accuracy": 91.20,
       "image_f1": 89.60,
       "mean_iou": 47.30,

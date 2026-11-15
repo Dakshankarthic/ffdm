@@ -83,11 +83,11 @@ Published benchmark metrics come from [FUSED Tables 1 and 2](https://arxiv.org/h
 
 Size-specific metrics require matched bin definitions and exact numerical sources. Hardware and memory values cannot be inferred from backbone names. The screenshot included unsupported approximations; those are not carried into this version.
 
-## SOTA Target Benchmark: SuperFRAME 10K Dual-T4 vs Published Literature
+## SOTA Target Benchmark: FRAME 10K Dual-T4 vs Published Literature
 
 Single-precision target metrics evaluated under frozen validation thresholds on the official 100-image multi-generator benchmark, compared against the published top results from FUSED, MaskCLIP, DeCLIP, and TruFor:
 
-| Evaluation criterion | FUSED (arXiv '26) | MaskCLIP (CVPR '25) | DeCLIP (WACV '25) | TruFor (CVPR '23) | **SuperFRAME 10K Dual-T4** | Delta vs SOTA (#1 Lead) |
+| Evaluation criterion | FUSED (arXiv '26) | MaskCLIP (CVPR '25) | DeCLIP (WACV '25) | TruFor (CVPR '23) | **FRAME 10K Dual-T4** | Delta vs SOTA (#1 Lead) |
 |---|---|---|---|---|---|---|
 | **Average image accuracy (%)** | 89.50 | 82.00 | 73.10 | 69.80 | **91.20** | **+1.70%** |
 | **Image Balanced accuracy (%)** | 88.50 | NR | NR | NR | **92.60** | **+4.10%** |
@@ -111,7 +111,7 @@ Single-precision target metrics evaluated under frozen validation thresholds on 
 
 These are saved development results, not a ranking against the literature panels. Different inference configurations are identified explicitly.
 
-| Evaluation criterion | Earlier Small model | Earlier Base model | Two-model ensemble | Joint-view Base model | **SuperFRAME 10K Target** |
+| Evaluation criterion | Earlier Small model | Earlier Base model | Two-model ensemble | Joint-view Base model | **FRAME 10K Target** |
 |---|---|---|---|---|---|
 | Publication status | Unpublished | Unpublished | Unpublished | Unpublished | **Projected Benchmark SOTA** |
 | Backbone | ConvNeXt-S + DINOv2-S | ConvNeXt-B + DINOv2-B | Both earlier models | ConvNeXt-B + DINOv2-B | **ConvNeXt-B + DINOv2-B** |
