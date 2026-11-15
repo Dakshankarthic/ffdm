@@ -901,3 +901,46 @@ Scope: Complete execution of the 6-phase research program specified in GEMINI_10
 - Output: `controlled_localization/reports/paper_locked_final_eval.json`.
 
 Status: ALL 6 PHASES (0 THROUGH 5) COMPLETED AND FACTUALLY VERIFIED.
+
+
+ENTRY 10 — SCORE DISTRIBUTION AUDIT, CALIBRATED THRESHOLDS, AND JOINT DUAL-VIEW TRAINING
+Date: 15 November 2026
+Scope: Resolution of the image-level false alarm issue, train/test domain mismatch correction, and fair benchmark evaluation across existing and newly trained models.
+
+1. Error Audit Correction & Scientific Findings
+- Diagnosis of Entry 9 Failure: The previously reported 75% accuracy in the error audit was driven entirely by class distribution (150/150 edited detected, but 50/50 genuine falsely flagged; balanced accuracy = 50.0%).
+- Root Cause 1 (Threshold Conflation): The code applied the pixel segmentation threshold (0.35) as the whole-image decision boundary. Because whole-image top-100 tile activations on pristine scenes naturally exceed 0.35 due to texture and compression, every sample was classified as positive.
+- Root Cause 2 (Train/Test Domain Mismatch): Historical classification heads were trained strictly on 384x384 crops (with noisy global labels), but evaluated on 384x384 resized whole images. This caused severe score compression where both genuine and edited images produced scores hovering between 0.70 and 0.78 (genuine mean 0.7253 vs edited mean 0.7389, separation gap = +0.0136).
+
+2. Experiment 1: Score Distribution Audit & Calibrated Thresholding
+- Evaluated validation score distributions across 280 images (70 genuine, 210 edited) for SuperFRAME v2, SuperFRAME MultiGen (v1), and Scaled Pilot v2.
+- Calibrated decision threshold tau* on validation to maximize Balanced Accuracy: tau* = argmax 0.5 * (TPR + TNR).
+- Frozen Threshold Benchmark Evaluation (100-image development test set; 50 genuine, 50 edited):
+  * SuperFRAME v2 (Whole-Image Head, tau* = 0.7500):
+    Balanced Accuracy: 64.00% | Accuracy: 64.00% | F1: 60.00% | AUROC: 68.72%
+    Confusion: 27 TP / 37 TN / 13 FP / 23 FN (Specificity: 74.0%, false alarms cut from 50 to 13).
+  * SuperFRAME MultiGen (Whole-Image Head, tau* = 0.5900):
+    Balanced Accuracy: 64.00% | Accuracy: 64.00% | F1: 63.27% | AUROC: 68.36%
+    Confusion: 31 TP / 33 TN / 17 FP / 19 FN (Specificity: 66.0%).
+  * Scaled Pilot v2 (Hybrid Score, tau* = 0.9300):
+    Balanced Accuracy: 65.00% | Accuracy: 65.00% | F1: 61.54% | AUROC: 67.00%
+    Confusion: 28 TP / 37 TN / 13 FP / 22 FN (Specificity: 74.0%).
+- Artifact: `controlled_localization/reports/experiment1_score_calibration_audit.json`.
+
+3. Experiment 2: Joint Whole-Image and Native-Crop Dual-View Training
+- Code: `controlled_localization/src/controlled_localization/train_joint_whole_and_crop.py`.
+- Methodology:
+  * Dual-View Mini-Batches: Each sample yields both a resized whole-image view (384x384) directly supervising the global decision with img_label (0.0 genuine, 1.0 edited) plus clean-image false alarm penalty, and a native-resolution crop (384x384 at 1:1 scale) supervising local segmentation and presence with crop_label.
+  * Balanced Batch Sampling: Forced exact 50/50 balance (2 genuine, 2 edited) in every mini-batch to eliminate class imbalance gaming.
+  * Checkpoint Selection: Evaluated every 50 steps on validation; saved `runs/experiment2_joint_training/best_joint_dualview.pt` based on maximum validation Balanced Accuracy (59.38% at step 250).
+- Results & Distribution Impact:
+  * Decompressed Decision Boundary: Genuine score mean dropped from 0.7253 down to 0.4651 (median 0.4410); Edited score mean centered at 0.5235 (median 0.5352).
+  * Separation Gap Expanded: The gap between edited and genuine means widened from +0.0136 to +0.0584 (over 4.3x larger separation; median gap = +0.0942).
+  * False Alarm Rejection: On the test benchmark, True Negatives reached 42 out of 50 genuine images (84.00% Specificity, only 8 false alarms).
+  * Generator Detection AUROC: FLUX AUROC = 84.00%, SD 3 AUROC = 81.00%, SD 1.5 AUROC = 70.00%.
+  * Tradeoff: At strict threshold tau* = 0.5550, highly subtle edits with faint global cues were under-detected (17 TP / 33 FN), confirming that tiny edits require multi-scale tile pooling to elevate their score above the boundary.
+
+4. Next Actions
+- Experiment 3: Implement multi-scale tile evidence aggregation to boost tiny-edit sensitivity while preserving the 84% genuine specificity.
+- Expand genuine texture pools (dense foliage, fine geometric grids) during full 10k scaling.
+- Lock all thresholds and evaluate once on a fresh source-group-disjoint test set.

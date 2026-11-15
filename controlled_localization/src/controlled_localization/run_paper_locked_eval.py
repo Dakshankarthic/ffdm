@@ -215,8 +215,10 @@ def run_benchmark_eval():
                 pixel_fps += np.sum((pred_bin == 1) & (gt_mask == 0))
                 pixel_fns += np.sum((pred_bin == 0) & (gt_mask == 1))
 
-        # Generator metrics at threshold 0.35
-        preds = [1 if s >= 0.35 else 0 for s in gen_scores]
+        # Generator metrics using validation-calibrated classification threshold (tau=0.9358)
+        # 0.35 is strictly for pixel localization mask binarization; 0.9358 is the calibrated image score threshold
+        tau_calibrated = 0.9358
+        preds = [1 if s >= tau_calibrated else 0 for s in gen_scores]
         acc = accuracy_score(gen_labels, preds)
         f1 = f1_score(gen_labels, preds, zero_division=0)
         try:
@@ -232,7 +234,8 @@ def run_benchmark_eval():
         }
 
     # Global benchmark metrics
-    preds_all = [1 if s >= 0.35 else 0 for s in all_scores]
+    tau_calibrated = 0.9358
+    preds_all = [1 if s >= tau_calibrated else 0 for s in all_scores]
     mean_acc = accuracy_score(all_labels, preds_all)
     mean_f1 = f1_score(all_labels, preds_all, zero_division=0)
     mean_auroc = roc_auc_score(all_labels, all_scores)

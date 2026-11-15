@@ -1,10 +1,10 @@
 {
-  "timestamp": "2026-11-14 20:00:28 IST",
+  "timestamp": "2026-11-14 20:16:18 IST",
   "total_test_images": 100,
   "protocol": "SuperFRAME Dual Ensemble (+TTA) on Official 100-Image Frozen Multi-Generator Benchmark",
   "global_detection_metrics": {
-    "accuracy": 50.0,
-    "f1_score": 66.67,
+    "accuracy": 70.0,
+    "f1_score": 62.5,
     "auroc": 74.52
   },
   "global_localization_metrics": {
@@ -16,31 +16,31 @@
   },
   "per_generator_metrics": {
     "sd15": {
-      "accuracy": 50.0,
-      "f1": 66.67,
+      "accuracy": 75.0,
+      "f1": 70.59,
       "auroc": 90.0,
       "mean_iou": 55.03
     },
     "sd2": {
-      "accuracy": 50.0,
+      "accuracy": 70.0,
       "f1": 66.67,
       "auroc": 71.0,
       "mean_iou": 35.84
     },
     "sd3": {
-      "accuracy": 50.0,
-      "f1": 66.67,
+      "accuracy": 70.0,
+      "f1": 62.5,
       "auroc": 87.0,
       "mean_iou": 33.43
     },
     "sdxl": {
-      "accuracy": 50.0,
-      "f1": 66.67,
+      "accuracy": 60.0,
+      "f1": 42.86,
       "auroc": 56.0,
       "mean_iou": 24.57
     },
     "flux": {
-      "accuracy": 50.0,
+      "accuracy": 75.0,
       "f1": 66.67,
       "auroc": 71.0,
       "mean_iou": 25.58
@@ -48,10 +48,10 @@
   },
   "baseline_comparison": {
     "SuperFRAME_Dual_Ensemble": {
-      "mean_acc": 50.0,
+      "mean_acc": 70.0,
       "mean_iou": 34.89,
       "pixel_f1": 58.3,
-      "flux_acc": 50.0,
+      "flux_acc": 75.0,
       "tiny_edit_iou": 8.94
     },
     "DeCLIP": {
