@@ -1,0 +1,92 @@
+flowchart TD
+    subgraph INPUT["1. Dual-View Input Stage"]
+        direction TB
+        IMG["Single Suspect Image (H x W, Native Resolution)"]
+        WV["Global Resized View (512 x 512)<br>Macroscopic scene context & global semantics"]
+        NV["Native Sliding Tiles (512 x 512, Stride 256)<br>1:1 Native pixel scale (zero downsampling blur)"]
+        TTA["Horizontal Flip Test-Time Augmentation (TTA)"]
+    end
+
+    subgraph TRI_STREAM["2. Tri-Stream Feature Encoders"]
+        direction TB
+        subgraph STREAM_A["Semantic Stream A: Hierarchical RGB"]
+            CN["ConvNeXt-Base (88M params)"]
+            C_FEATS["Stages: C4 (128ch), C8 (256ch),<br>C16 (512ch), C32 (1024ch)"]
+        end
+        subgraph STREAM_B["Semantic Stream B: Foundation ViT"]
+            DINO["Frozen DINOv2-Base (86M params)"]
+            D_FEATS["Self-Supervised Patch Tokens:<br>S4, S8, S16, S32 (768-dim)"]
+        end
+        subgraph STREAM_C["Forensic Stream C: Noise Residuals"]
+            SRM["30 Fixed SRM High-Pass Filters"]
+            BAYAR["30 Learnable Bayar Constrained Convolutions"]
+            F_FEATS["Zero-Sum Residual Pyramid:<br>F2 (48ch), F4 (96ch),<br>F8 (144ch), F16 (192ch)"]
+        end
+    end
+
+    subgraph DECODER["3. Cross-Attention Decoder (MH-CAD)"]
+        direction TB
+        PROJ["Semantic Projection: Proj(Concat(ConvNeXt, DINOv2))"]
+        MCA["Stride-16 Multi-Head Cross-Attention<br>Q: Forensic Residuals (F16) | K, V: Dense Semantics (Sem16)"]
+        GATE["Adaptive Spatial Gating (Strides 8, 4)"]
+        S2_REF["Stride-2 Native Refinement<br>Fuses Up(P4) with F2 High-Pass Stem"]
+    end
+
+    subgraph HEADS["4. Dual Heads & Decision Aggregation"]
+        direction TB
+        MASK_HEAD["Pixel Mask Head (1x1 Conv + Bilinear Upsample)<br>Reconstructs Full Heatmap M via 2D Hann Blending"]
+        DET_HEAD["Image Classification Head (MLP)<br>Input: Concat(GAP, GMP, Top-K Mean)"]
+        S_WHOLE["Whole-Image Detection Score (s_whole)"]
+        S_POOL["Native Top-100 Tile Pixel Anomaly Mean (s_pool)"]
+        HYBRID["Hybrid Decision Score: s_hybrid = 0.50 * s_whole + 0.50 * s_pool"]
+    end
+
+    subgraph DECISION["5. Calibrated Deployment Verdict"]
+        direction TB
+        BIN_MASK["Binary Inpainting Mask (Threshold t_mask = 0.35)<br>Mean IoU: 47.30% | Pixel F1: 63.80% | Tiny IoU: 13.60%"]
+        PRED["Frozen Validation Decision (tau* = 0.5550)"]
+        GEN["AUTHENTIC / PRISTINE (Score < 0.5550)<br>Specificity: 94.00% (Only 3 FP / 50)"]
+        EDT["MANIPULATED / INPAINTED (Score >= 0.5550)<br>Accuracy: 91.20% | AUROC: 93.40%"]
+    end
+
+    %% Routing
+    IMG --> WV
+    IMG --> NV
+    NV --> TTA
+
+    WV --> CN
+    WV --> DINO
+    WV --> SRM
+    WV --> BAYAR
+
+    TTA --> CN
+    TTA --> DINO
+    TTA --> SRM
+    TTA --> BAYAR
+
+    CN --> C_FEATS
+    DINO --> D_FEATS
+    SRM --> F_FEATS
+    BAYAR --> F_FEATS
+
+    C_FEATS --> PROJ
+    D_FEATS --> PROJ
+    PROJ --> MCA
+    F_FEATS --> MCA
+
+    MCA --> GATE
+    GATE --> S2_REF
+
+    S2_REF --> MASK_HEAD
+    GATE --> DET_HEAD
+
+    MASK_HEAD --> S_POOL
+    MASK_HEAD --> BIN_MASK
+    DET_HEAD --> S_WHOLE
+
+    S_WHOLE --> HYBRID
+    S_POOL --> HYBRID
+
+    HYBRID --> PRED
+    PRED -->|Below tau*| GEN
+    PRED -->|Above tau*| EDT
