@@ -1,0 +1,11 @@
+PAPER AUDIT - 15 November 2026
+
+Two reviews: layout/figure and scientific claims.
+
+Critical finding: FDDM_Research_Flow_and_Log.txt entry 12 labels 91.20% accuracy and 47.30% IoU as a target scorecard. target_kaggle_10k_evaluation.json reproduces those values, but a checkpoint, full log, test manifest, per-image predictions and scoring specification for a completed 10K run were not found locally. Counts TP=46, TN=47, FP=3, FN=4 imply 93.0% accuracy and 92.93% positive F1, not 91.20% and 89.60%. Do not claim a verified lead over FUSED without evidence.
+
+Corrections: Removed unsupported component ablations, invented GPU/Jetson timing table, unsubstantiated claims about evaluated YOLO/SAM baselines and source-disjoint guarantees. Rewrote sections to distinguish the saved development evaluation, target scorecard and published FUSED protocol; retained 15-method published benchmark. Corrected method description and updated the flowchart to match saved 384-pixel ensemble inference. Qualitative image is labeled as an earlier diagnostic model, not 10K predictions.
+
+Verification: manuscript compilation and static citation/reference checks; figure alignment visually reviewed. Full manuscript page rendering was not accessible for independent visual inspection through the available compiler. Reconcile 10K artifacts, audit actual predictions and masks, validate bibliography metadata and inspect final PDF pages before submission.
+
+Original pre-audit sections preserved in paper_work/pre_audit_20261115.

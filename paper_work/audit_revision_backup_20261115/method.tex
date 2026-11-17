@@ -1,0 +1,33 @@
+\section{Methodology}
+\label{sec:method}
+Given an RGB image $I\in\mathbb{R}^{H\times W\times3}$, the system predicts an image-level edit score and a spatial map. The original photograph is not needed at inference. Reference labels and masks are used during training and evaluation. Figure~\ref{fig:framework_flowchart} summarizes the documented ensemble evaluation; its compact and larger models use different backbones and fusion modules.
+\begin{figure*}[t]
+\centering
+\includegraphics[width=\textwidth]{figures/framework_flowchart.pdf}
+\caption{Documented development ensemble pipeline. A whole-image view supplies context and native tiles preserve local detail. The Base model uses cross-attention; the Small model uses gated fusion. The displayed decision settings are specific to the saved ensemble evaluation.}
+\Description{A whole image and overlapping crops are processed through semantic and residual features, followed by mask prediction and score aggregation.}
+\label{fig:framework_flowchart}
+\end{figure*}
+
+\subsection{Content and residual encoders}
+The larger detector uses ConvNeXt-Base and frozen DINOv2 ViT-Base/14~\cite{convnext,dinov2}. ConvNeXt supplies features at strides 4, 8, 16 and 32. DINOv2 features from intermediate blocks 2, 5, 8 and 11 are interpolated to the corresponding spatial sizes. The two feature streams are concatenated and projected to 128 channels at each scale. The residual encoder combines 30 fixed SRM responses with 30 learned constrained-convolution responses~\cite{bayar,srm}, then produces features at strides 2, 4, 8 and 16.
+
+At stride 16 the larger model uses eight-head cross-attention: projected forensic features provide queries and projected content features provide keys and values. The attention output includes a residual connection and feed-forward block. A learned spatial gate combines content and attended features; a top-down pyramid and further gates fuse the stride-8 and stride-4 representations. Stride-2 residual features refine the localization map, which is bilinearly upsampled. The compact model uses ConvNeXt-Small and frozen DINOv2-Small with gated fusion.
+
+The image head concatenates global average and maximum pooled stride-32 content features with the mean of the highest 2,048 mask logits from that forward pass. An MLP converts these features to a classification logit. This internal logit pooling is distinct from the top-100 probability pooling used to aggregate the full tile map.
+
+\subsection{Training configurations}
+The compact and larger checkpoints used in the earlier ensemble were trained with an earlier crop-based procedure that could assign the source image label to a crop containing no labeled edit. A later, separate joint-view configuration gives the resized whole image its source label and assigns each native crop a positive label only if its mask contains edited pixels. The crop sampler favors edited regions for some training samples, while the mini-batch sampler balances genuine and edited source images.
+
+The joint-view objective is
+\begin{equation}
+\mathcal{L}=\mathcal{L}_{\mathrm{whole}}+0.5\mathcal{L}_{\mathrm{crop}}+\mathcal{L}_{\mathrm{seg}}+0.3(\mathcal{L}_{\mathrm{bg,w}}+\mathcal{L}_{\mathrm{bg,c}}).
+\end{equation}
+The classification terms use binary cross-entropy. Segmentation on edit-containing crops combines balanced pixel binary cross-entropy and soft Dice loss; the background terms penalize mean mask probabilities on genuine whole views and empty-mask crops. Checkpoint selection in this experiment uses validation whole-image balanced accuracy. The saved ensemble results are not evidence of the joint-training objective's isolated effect.
+
+\subsection{Development ensemble inference}
+The recorded ensemble uses a $384\times384$ whole-image view and overlapping $384\times384$ tiles with stride 256. The larger and compact model predictions are combined with weights 0.65 and 0.35. Tile predictions include horizontal flips and Hann-weighted merging. The mean of the 100 highest values in the merged probability map gives $s_{\mathrm{local}}$, which is combined with the whole-image score:
+\begin{equation}
+ s = 0.15s_{\mathrm{whole}}+0.85s_{\mathrm{local}}.
+\end{equation}
+For the saved evaluation, the image threshold was 0.9358, inherited from an earlier calibration, and the mask threshold was 0.35. The mask is further processed by filling holes and removing components smaller than 64 pixels. These settings characterize the development evaluation; they have not been established for a separate claimed 10K run.

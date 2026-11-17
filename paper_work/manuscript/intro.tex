@@ -5,6 +5,16 @@ The advent of modern generative diffusion models---spanning Latent Diffusion Mod
 
 Unlike whole-image synthesis, where global structural incoherence, geometric warping, and unnatural perspective cues frequently betray synthetic origin, local generative inpainting modifies only a constrained sub-region of an otherwise authentic photograph. Consequently, over $90\%$ of the image content may remain pristine, preserving natural lens distortion, camera sensor noise, and scene lighting. At the same time, state-of-the-art diffusion inpainters condition their generation on surrounding context, synthesizing textures that harmoniously integrate with adjacent authentic pixels. Forensic detectors must therefore identify subtle sub-pixel boundary seams and micro-statistical noise discrepancies without relying on macroscopic semantic distortions.
 
+Figure~\ref{fig:intro-problem} illustrates the problem using an inpainted image and its reference annotation. The input image provides the scene context, while the colored annotation identifies the localized area the system is expected to find. In practice, the annotation is available for evaluation but is not supplied to the detector when examining an unknown image. This distinction makes both the image-level decision and the accuracy of the predicted region important.
+
+\begin{figure*}[t]
+\centering
+\includegraphics[width=0.92\textwidth]{figures/introduction_problem.png}
+\caption{An example of the local inpainting detection and localization problem. (a) An edited input image from the OpenSDID-derived development data. (b) The same image with the reference edit region overlaid in red. The reference mask is shown for illustration and evaluation; it is not an input to the detector.}
+\Description{An image of cyclists is shown alongside the same image with its annotated edited region highlighted in red.}
+\label{fig:intro-problem}
+\end{figure*}
+
 Under these operational constraints, prior research in image edit detection has predominantly pursued two disjoint and inherently flawed paradigms:
 \begin{enumerate}
     \item \textbf{Global Downsampling Paradigms:} The first paradigm resizes the entire input image to a fixed low-resolution canvas (e.g., $224 \times 224$ or $512 \times 512$) to fit within standard convolutional or Vision Transformer (ViT) backbones~\cite{opensdi,fused,cnndet}. While this provides complete macroscopic scene context, bilinear or bicubic downsampling acts as a spatial low-pass filter, catastrophically smoothing away the high-frequency pixel interpolation seams and diffusion noise variances that characterize generative inpainting boundaries. As a result, downsampling-based models fail on modern high-resolution generators such as SDXL and FLUX.1, where inpainting artifacts are inherently high-frequency and localized.

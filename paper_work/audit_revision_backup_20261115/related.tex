@@ -1,0 +1,7 @@
+\section{Related Work}
+\label{sec:related}
+\paragraph{Image manipulation localization.} Methods such as MVSS-Net, PSCC-Net, CAT-Net and TruFor investigate noise, compression, multi-scale features or learned residuals to identify edited regions~\cite{mvss,pscc,catnet,trufor}. These approaches demonstrate the value of local evidence, while genuine image processing can also create residual responses.
+
+\paragraph{Generative image detection.} CNNDetection, GramNet, NPR and frequency-based approaches examine statistical clues associated with image generation~\cite{cnndet,gramnet,npr,freqnet}. Such image-level signals may generalize differently across generators and do not necessarily identify the modified region. The inpainting exchange study shows that detectors can rely on artifacts outside the edit~\cite{inpx}.
+
+\paragraph{Pretrained representations and diffusion inpainting.} DeCLIP decodes CLIP features for localization, while OpenSDI studies diffusion-generated edits and introduces MaskCLIP~\cite{declip,opensdi}. FUSED combines forensic and semantic representations with token-level mixture-of-experts fusion and reports cross-generator results and transfer tests~\cite{fused}. Our work examines a different implementation using ConvNeXt, DINOv2, residual filtering and a cross-attention pyramid. Combining semantic and forensic features is an established direction; the contribution of any specific component in our configuration requires controlled ablation.

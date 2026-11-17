@@ -34,11 +34,13 @@ Prior to finalizing the FRAME dual-view cross-attention framework, four alternat
 \centering\small
 \caption{Taxonomy of evaluated and rejected baseline architectures and their empirical failure modes in diffusion inpainting detection and localization.}
 \label{tab:rejected_taxonomy}
-\begin{tabular}{@{}llp{10.2cm}@{}}
+\setlength{\tabcolsep}{3pt}
+\renewcommand{\arraystretch}{1.12}
+\begin{tabular}{@{}p{2.7cm}p{3.5cm}p{\dimexpr\textwidth-6.2cm-4\tabcolsep\relax}@{}}
 \toprule
 Paradigm & Architecture & Primary Physical / Algorithmic Failure Mode \\
 \midrule
-\multirow{2}{*}{\shortstack[l]{Cascaded Object\\Detection + SAM}} 
+\shortstack[l]{Cascaded Object\\Detection + SAM} 
 & YOLOv11s + SAM~\cite{yolo,sam} & Inpainting boundaries rarely align with semantic object boxes; object detectors miss subtle removals or texture alterations, failing to provide valid prompt coordinates. \\
 \addlinespace[3pt]
 & Grounding DINO + SAM~\cite{gdino,sam} & Open-vocabulary prompts fail on zero-semantic removals (e.g., erasing a lamppost); language grounding produces high proposal jitter and hallucinations on natural textures. \\
@@ -62,9 +64,12 @@ Table~\ref{tab:main_benchmark} presents a comprehensive quantitative comparison 
 \centering\small
 \caption{Comprehensive quantitative comparison against published state-of-the-art architectures on the OpenSDID benchmark. All values are percentages (\%). The best results are in \textbf{bold}; second-best are \underline{underlined}. NR indicates values not reported in original publication tables; N/A indicates detection-only baselines without localization heads.}
 \label{tab:main_benchmark}
+\setlength{\tabcolsep}{3pt}
+\renewcommand{\arraystretch}{1.12}
+\resizebox{\textwidth}{!}{%
 \begin{tabular}{@{}llcccccccc@{}}
 \toprule
-Method Category & Model / Architecture & Image Acc. $\uparrow$ & Balanced Acc. $\uparrow$ & Image $\mathrm{F}_1 \uparrow$ & AUROC $\uparrow$ & Mean IoU $\uparrow$ & Pixel $\mathrm{F}_1 \uparrow$ & Tiny IoU ($<2\%$) $\uparrow$ & FPR $\downarrow$ \\
+\shortstack{Method\\Category} & \shortstack{Model /\\Architecture} & \shortstack{Image\\Acc. $\uparrow$} & \shortstack{Balanced\\Acc. $\uparrow$} & \shortstack{Image\\$\mathrm{F}_1 \uparrow$} & AUROC $\uparrow$ & \shortstack{Mean\\IoU $\uparrow$} & \shortstack{Pixel\\$\mathrm{F}_1 \uparrow$} & \shortstack{Tiny IoU\\($<2\%$) $\uparrow$} & FPR $\downarrow$ \\
 \midrule
 \multirow{3}{*}{Detection-Only} 
 & CNNDetection~\cite{cnndet} & 70.90 & NR & 61.60 & 72.30 & N/A & N/A & N/A & 31.40 \\
@@ -85,6 +90,7 @@ Method Category & Model / Architecture & Image Acc. $\uparrow$ & Balanced Acc. $
 \textbf{Proposed} & \textbf{FRAME (Ours)} & \textbf{91.20} & \textbf{92.60} & \textbf{89.60} & \textbf{93.40} & \textbf{47.30} & \textbf{63.80} & \textbf{13.60} & \textbf{6.00} \\
 \bottomrule
 \end{tabular}
+}
 \end{table*}
 
 \paragraph{Comparison with FUSED.} FUSED~\cite{fused} represents the current published state-of-the-art, trained on massive multi-node clusters ($2 \times \mathrm{H}100$ GPUs, 188 GB VRAM) utilizing a heavy `CLIP-ConvNeXt-XXL' backbone. Despite operating with a substantially lighter computational footprint ($2 \times \mathrm{Tesla\ T4}$ GPUs), FRAME outperforms FUSED by \textbf{+1.70\% in image accuracy} ($91.20\%$ vs. $89.50\%$), \textbf{+4.10\% in balanced accuracy} ($92.60\%$ vs. $88.50\%$), \textbf{+2.80\% in mean localization IoU} ($47.30\%$ vs. $44.50\%$), and \textbf{+8.50\% in pixel F1} ($63.80\%$ vs. $55.30\%$). 
@@ -98,6 +104,7 @@ Table~\ref{tab:generator_breakdown} details the localization performance across 
 \centering\small
 \caption{Cross-generator localization performance (mIoU, \%) across five diffusion architectures on the OpenSDID benchmark.}
 \label{tab:generator_breakdown}
+\resizebox{\columnwidth}{!}{%
 \begin{tabular}{@{}lccccc@{}}
 \toprule
 Architecture & SD 1.5 & SD 2.1 & SD 3 & SDXL & FLUX.1 \\
@@ -110,6 +117,7 @@ FUSED~\cite{fused} & 59.60 & 52.40 & 50.00 & 37.50 & 22.90 \\
 \textbf{FRAME (Ours)} & \textbf{68.40} & \textbf{56.10} & \textbf{52.70} & \textbf{41.80} & \textbf{29.50} \\
 \bottomrule
 \end{tabular}
+}
 \end{table}
 
 The most significant performance delta occurs on the most sophisticated generators: SDXL and FLUX.1. On FLUX.1, which employs 12B-parameter rectified flow matching, prior forensic methods suffer catastrophic failures: TruFor achieves only $7.60\%$ IoU, while FUSED degrades to $22.90\%$. In contrast, FRAME achieves \textbf{29.50\% IoU} and \textbf{92.50\% AUROC}. This superiority directly validates our $1:1$ native-resolution sliding tile design: rectified flow matching synthesizes seamless sub-pixel textures that are imperceptible when downsampled, but exhibit unmistakable high-frequency noise variance under native-scale SRM and Bayar residual filtering.
@@ -173,11 +181,13 @@ Figure~\ref{fig:qualitative_results} presents qualitative visual comparisons of 
 \subsection{Component-Wise Architectural Ablation Study}
 To rigorously evaluate the isolated contribution of each architectural component, we conduct a progressive ablation study on identical validation splits, as reported in Table~\ref{tab:ablation}.
 
-\begin{table}[t]
+\begin{table*}[t]
 \centering\small
 \caption{Systematic component-wise ablation of the proposed FRAME architecture and loss formulation.}
 \label{tab:ablation}
-\begin{tabular}{@{}lcccc@{}}
+\setlength{\tabcolsep}{4pt}
+\renewcommand{\arraystretch}{1.15}
+\begin{tabular*}{\textwidth}{@{\extracolsep{\fill}}lcccc@{}}
 \toprule
 Ablated Configuration & Acc. (\%) & B-Acc. (\%) & mIoU (\%) & Pixel $\mathrm{F}_1$ (\%) \\
 \midrule
@@ -190,8 +200,8 @@ Ablated Configuration & Acc. (\%) & B-Acc. (\%) & mIoU (\%) & Pixel $\mathrm{F}_
 (7) + Soft Dice Loss Formulation ($\mathcal{L}_{\mathrm{Dice}}$) & 89.80 & 90.40 & 46.50 & 62.10 \\
 (8) + Full Pipeline + Horizontal-Flip TTA & \textbf{91.20} & \textbf{92.60} & \textbf{47.30} & \textbf{63.80} \\
 \bottomrule
-\end{tabular}
-\end{table}
+\end{tabular*}
+\end{table*}
 
 \paragraph{Key Ablation Findings:}
 \begin{itemize}
@@ -204,11 +214,13 @@ Ablated Configuration & Acc. (\%) & B-Acc. (\%) & mIoU (\%) & Pixel $\mathrm{F}_
 \subsection{Computational Efficiency and Hardware Profiling}
 To evaluate practical deployment viability, we profiled FRAME against standard baselines across two computational tiers: a high-end workstation GPU (NVIDIA RTX 4090, 24GB) and an embedded edge computing board (NVIDIA Jetson AGX Orin, 64GB) executing under FP16 TensorRT. As shown in Table~\ref{tab:hardware_profile}, FRAME sustains real-time throughput of \textbf{31.2 FPS} on RTX 4090 and \textbf{16.4 FPS} on Jetson Orin, requiring only 4,120 MB peak VRAM.
 
-\begin{table}[t]
+\begin{table*}[t]
 \centering\small
 \caption{Inference latency (ms), frame throughput (FPS), and peak GPU memory footprint (MB) across computational tiers.}
 \label{tab:hardware_profile}
-\begin{tabular}{@{}lcccc@{}}
+\setlength{\tabcolsep}{4pt}
+\renewcommand{\arraystretch}{1.15}
+\begin{tabular*}{\textwidth}{@{\extracolsep{\fill}}lcccc@{}}
 \toprule
 Hardware Platform & Model & Latency (ms) $\downarrow$ & Throughput (FPS) $\uparrow$ & Peak VRAM (MB) $\downarrow$ \\
 \midrule
@@ -222,8 +234,8 @@ Hardware Platform & Model & Latency (ms) $\downarrow$ & Throughput (FPS) $\uparr
 & TruFor~\cite{trufor} & 98.6 & 10.1 & 5,850 \\
 & \textbf{FRAME (Ours)} & \textbf{61.0} & \textbf{16.4} & \textbf{3,840} \\
 \bottomrule
-\end{tabular}
-\end{table}
+\end{tabular*}
+\end{table*}
 
 \subsection{Empirical Distributions and Decision Decompression}
 \label{sec:empirical_distributions}

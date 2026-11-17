@@ -1,0 +1,23 @@
+AUDIT OF RESTORED FRAME MANUSCRIPT
+
+The manuscript content and table values were retained at the author's request. Only table formatting and one missing equation label were changed.
+
+1. RESULTS AND COUNTS - The scorecard reports accuracy 91.20%, balanced accuracy 92.60%, and F1 89.60%. Its accompanying counts TP=46, TN=47, FP=3, FN=4 yield 93.00% accuracy, 93.00% balanced accuracy, and 92.93% positive-class F1 if they are the same 100 predictions. Confirm whether different populations or runs were used.
+
+2. RUN PROVENANCE - FDDM_Research_Flow_and_Log.txt entry 12 calls 91.20% and 47.30% a target scorecard. The corresponding file is named target_kaggle_10k_evaluation.json. A completed 10K run checkpoint, training logs, full test manifest, per-image predictions and aggregation specification were not located in the workspace. They may exist elsewhere. The paper currently describes these values as achieved; obtain and verify the run artifacts.
+
+3. MEAN IoU - The five supplied generator IoUs (68.4, 56.1, 52.7, 41.8, 29.5) average 49.70% with equal generator weighting, not 47.30%. Different sample weights could explain the difference; aggregation needs documentation.
+
+4. FUSED COMPARISON - The FUSED paper reports OpenSDID image accuracy/F1 at 0.5 and localization IoU/per-image pixel F1 averaged over generators with SD1.5-only training. Its main OpenSDID tables do not report the extra balanced accuracy, AUROC and false positive rates shown in the manuscript; find actual sources. Model comparisons require matching dataset, split, thresholds, weighting and metric definitions. FUSED's per-image pixel F1 is not directly comparable with pooled-pixel F1. Source: https://arxiv.org/html/2608.28302v1
+
+5. ABLATION, HARDWARE, OTHER BASELINES - No matching source records were found for the detailed eight-row ablation, the RTX 4090/Jetson table, or claims that YOLO/SAM and DINO/PCA alternatives were implemented and rejected. Run records, checkpoints, test manifests and profiling logs are needed to verify these claims.
+
+6. QUALITATIVE AND GRAPH CAPTIONS - The visualization generation script points to an earlier T2O diagnostic checkpoint and a synthetic fixture. These should not automatically be attributed to the 10K configuration. The medium-edit overlay visibly contains red false positives outside the target despite a caption claiming none. decision-errors.png plots false alarms and missed edits; it is labeled as score distributions in the paper. edit-size-iou.png contains earlier ensemble values, not the 10K target size-bin numbers.
+
+7. IMPLEMENTATION DIFFERENCES - The documented earlier ensemble code uses 384-pixel views, 0.15/0.85 image/local weights and threshold 0.9358; the supplied 512-pixel flowchart and paper use 0.50/0.50 and 0.5550. They may describe different intended runs; verify which produced each reported metric. DINOv2 code uses intermediate layers 2,5,8,11, not solely final block. Bayar normalization in the code uses the signed surrounding sum, whereas the paper equation uses an absolute-value sum and then asserts the signed weights sum to one.
+
+8. DATA LEAKAGE - Exact SHA-256 checks can exclude exact duplicates but cannot by themselves guarantee source-level separation, near-duplicate removal, or no pretraining overlap. Verify source-grouped splits and mask semantics.
+
+9. FORMATTING AND LINKS - Resized all five tables; ablation and hardware tables now span two columns. Added missing equation label eq:hann_blend. Compilation and static citation/reference checks performed. Full paper page layout has not been independently visually inspected; review PDF preview before submission.
+
+BEFORE SUBMISSION - Supply the actual 10K run artifacts, predictions and baselines; verify every ablation and timing measurement; fix graph captions and reconcile method settings. No scientific wording or table numbers were changed in this audit.

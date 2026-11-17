@@ -1,0 +1,83 @@
+\section{Experiments and Results}
+\label{sec:results}
+
+\subsection{Data and evaluation}
+The saved development evaluation uses 100 previously inspected images from OpenSDID-derived subsets~\cite{opensdi}: 20 images for each of SD1.5, SD2.1, SDXL, SD3 and FLUX.1, with ten genuine and ten edited in each group. The subset informed development and is not an independent final test. A prior audit found no exact hash overlap in the inspected manifests; this does not prove source disjointness or exclude near duplicates. Reference mask semantics and preprocessing should be checked before a definitive benchmark.
+
+Image accuracy measures the fraction of correct decisions; edited-class F1 summarizes precision and recall, and AUROC assesses score ranking across thresholds. On edited images, localization IoU is the intersection of the predicted and reference masks divided by their union, averaged per image. Pixel F1 can instead be pooled over pixels or averaged over images; these definitions need not agree. Size bins use the fraction of the image covered by the reference mask: below 2\%, 2--10\%, and above 10\%.
+
+\subsection{Recorded development evaluation}
+A saved 100-image ensemble summary reports 70.0\% accuracy, 62.50\% image F1, 0.7452 AUROC, and 34.89\% mean IoU. It reports pooled pixel F1 of 58.30\% over edited images. The recorded ensemble uses 384-pixel views, tile stride 256, image score weights 0.15/0.85, a mask threshold of 0.35 and an inherited image threshold of 0.9358. These settings are specific to that evaluation. Table~\ref{tab:dev} shows the recorded per-generator results. Each accuracy uses 20 images and each IoU uses ten edited images.
+\begin{table}[t]
+\centering\small
+\caption{Saved ensemble development results by editor. Accuracy and IoU are percentages.}
+\label{tab:dev}
+\begin{tabular}{@{}lrrr@{}}\toprule
+Editor & Accuracy & AUROC & Mean IoU \\\midrule
+SD1.5 & 75.0 & 0.9000 & 55.03 \\
+SD2.1 & 70.0 & 0.7100 & 35.84 \\
+SDXL & 60.0 & 0.5600 & 24.57 \\
+SD3 & 70.0 & 0.8700 & 33.43 \\
+FLUX.1 & 75.0 & 0.7100 & 25.58 \\\bottomrule
+\end{tabular}
+\end{table}
+The reported IoU for tiny, medium and large edits was 8.94\%, 29.33\%, and 45.16\%, respectively (Figure~\ref{fig:edit-size}). These exploratory values indicate a need to inspect small-edit failures; their small bin sizes limit precision. A separate whole-image comparison recorded 13 false positives and 23 false negatives for the earlier Base model, versus eight and 33 for the joint-view model, each on 50 genuine and 50 edited images at its own validation-selected threshold. Different thresholds and training configurations prevent attributing the difference to any one component.
+\begin{figure}[t]
+\centering
+\includegraphics[width=\columnwidth]{figures/edit-size-iou.png}
+\caption{Saved ensemble development IoU by reference edit area.}
+\Description{Three bars show the development mean IoU for tiny, medium, and large edits.}
+\label{fig:edit-size}
+\end{figure}
+
+\subsection{10K target scorecard and benchmark context}
+A local planning log labels the following numbers a target scorecard for a proposed 10,000-image run with 15,000 steps, a global batch of 16, and two Tesla T4 GPUs. Table~\ref{tab:reported10k} preserves its aggregate figures beside published FUSED results~\cite{fused}. The 10K checkpoint, training manifest, prediction file, and full aggregation rules have not been established from the available artifacts. FUSED reports equal-weight averages across five generator groups after SD1.5-only training, while the 10K protocol remains incompletely documented; the columns should not be interpreted as a matched test.
+\begin{table}[t]
+\centering\small
+\caption{Published FUSED OpenSDID averages and the separately reported 10K target. Protocols and aggregation are not established as matched.}
+\label{tab:reported10k}
+\begin{tabular}{@{}lrr@{}}\toprule
+Metric (\%) & FUSED & 10K target \\\midrule
+Image accuracy & 89.50 & 91.20 \\
+Image F1 & 88.00 & 89.60 \\
+Mean localization IoU & 44.50 & 47.30 \\
+Pixel F1 & 55.30 & 63.80 \\\bottomrule
+\end{tabular}
+\end{table}
+FUSED uses per-image pixel F1; the aggregation of the reported 10K target pixel F1 is unknown. The 10K target records 46 true positives, 47 true negatives, three false positives and four false negatives. For those 100 predictions, the counts imply 93.0\% accuracy, 93.0\% balanced accuracy and 92.93\% edited-class F1, rather than the reported 91.20\%, 92.60\% and 89.60\%. The five reported per-generator IoUs have an unweighted mean of 49.70\%, rather than the reported 47.30\%. Different subsets or weighting might explain the mismatch, but cannot be established without the underlying predictions and evaluation specification.
+
+\subsection{Published baseline context}
+Table~\ref{tab:baselines} lists the methods and reported scores in the common OpenSDID evaluation of FUSED~\cite{fused}. Accuracy is image-level; IoU is localization overlap. The venue refers to each method's original publication, while the measurements come from FUSED. These literature scores were not obtained in the 100-image development evaluation described above.
+\begin{table}[t]
+\centering\small
+\caption{Published OpenSDID averages, in percent, as reported by FUSED~\cite{fused}. Dashes denote unavailable localization scores.}
+\label{tab:baselines}
+\begin{tabular}{@{}llrr@{}}\toprule
+Method & Venue & Acc. & IoU \\\midrule
+FUSED~\cite{fused} & arXiv 2026 & 89.5 & 44.5 \\
+MaskCLIP~\cite{opensdi} & CVPR 2025 & 82.0 & 42.7 \\
+RINE~\cite{rine} & ECCV 2024 & 80.3 & -- \\
+PSCC-Net~\cite{psccnet} & TCSVT 2022 & 76.8 & 29.7 \\
+NPR~\cite{npr} & CVPR 2024 & 76.4 & -- \\
+CAT-Net~\cite{catnet} & IJCV 2022 & 76.2 & 37.4 \\
+UniFD~\cite{unifd} & CVPR 2023 & 75.7 & -- \\
+MVSS-Net~\cite{mvss} & TPAMI 2023 & 75.1 & 29.8 \\
+DeCLIP~\cite{declip} & WACV 2025 & 73.1 & 25.2 \\
+GramNet~\cite{gramnet} & CVPR 2020 & 72.3 & -- \\
+CNNDetection~\cite{cnnspot} & CVPR 2020 & 70.9 & -- \\
+TruFor~\cite{trufor} & CVPR 2023 & 69.8 & 36.9 \\
+ObjectFormer~\cite{objectformer} & CVPR 2022 & 66.3 & 24.1 \\
+FreqNet~\cite{freqnet} & AAAI 2024 & 66.3 & -- \\
+IML-ViT~\cite{imlvit} & arXiv 2023 & 56.4 & 32.5 \\\bottomrule
+\end{tabular}
+\end{table}
+
+\subsection{Qualitative examples}
+Figure~\ref{fig:qual} presents one earlier diagnostic prediction, showing partial overlap with the reference edit alongside responses on genuine background regions. It is a selected example from an earlier configuration, not a prediction attributed to the 10K target or the development ensemble.
+\begin{figure*}[t]
+\centering
+\includegraphics[width=\textwidth]{figures/sd15-localization.png}
+\caption{Earlier SD1.5 diagnostic example: input, reference region, anomaly heatmap, and prediction overlay. Yellow indicates overlap with the reference; red denotes predictions outside it.}
+\Description{An image, reference edit, anomaly heatmap, and prediction overlay illustrate partial localization and background responses.}
+\label{fig:qual}
+\end{figure*}

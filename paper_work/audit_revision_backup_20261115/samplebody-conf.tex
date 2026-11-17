@@ -1,0 +1,12 @@
+\input{intro}
+\input{related}
+\input{method}
+\input{results}
+
+\section{Discussion and Limitations}
+Our results show that detection and localization must be considered together: an image can receive the correct label while its predicted mask misses much of the edit. The low overlap for small regions and the differing false-alarm and missed-edit counts motivate evaluating crop supervision, tile inference, and decision thresholds in controlled comparisons. Existing configurations differ in training and scoring, so their differences cannot isolate the contribution of a single component.
+
+The development subset was inspected repeatedly and is small. Hash-based checks alone do not establish source-level independence, and mask provenance and transformations require verification. A stronger evaluation should lock the source-group split and thresholds before testing, report uncertainty and edit-size sample counts, and evaluate common checkpoints on the same images. Further tests should assess compression, resizing, held-out editors, and paired controls for reliance on traces outside the edit~\cite{inpx}. The claimed 10K run requires its checkpoint, manifest, full logs, predictions, and aggregation rules before it can support a matched comparison. Hardware latency and component ablations also require measured runs under documented settings.
+
+\section{Conclusion}
+We studied a dual-view approach to single-image inpainting detection and localization. The development evaluation suggests that small edited regions and the balance between missed edits and false alarms remain important challenges. The 10K scorecard is retained as a target, not a verified experimental result. A source-disjoint evaluation with reproducible predictions and matched baselines is required to determine whether the approach improves on published methods.

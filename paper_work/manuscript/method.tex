@@ -5,7 +5,7 @@ This section details the mathematical and architectural formulation of \textbf{F
 
 \begin{figure*}[t]
 \centering
-\includegraphics[width=0.85\textwidth]{figures/framework_flowchart.png}
+\includegraphics[width=0.85\textwidth]{figures/pipeline_flowchart_halfpage.pdf}
 \caption{Overall architecture and operational dataflow of the proposed FRAME framework. (1) Dual-View Input Stage: A single suspect photograph is partitioned into a resized global view for macroscopic scene reasoning and $1:1$ native-resolution sliding tiles with horizontal-flip test-time augmentation (TTA). (2) Tri-Stream Feature Encoders: Parallel representation extraction through ConvNeXt-Base (dense hierarchical semantics), frozen DINOv2-Base (self-supervised foundation tokens), and a 60-channel noise residual pyramid (30 fixed SRM + 30 learnable Bayar constrained convolutions). (3) Multi-Head Cross-Attention Decoder (MH-CAD): Forensic residual queries cross-attend to dense semantic keys and values, guided by adaptive spatial gating and Stride-2 high-pass refinement. (4) Dual Heads \& Decision Aggregation: Reconstructs full continuous heatmap $\hat{M}$ via 2D Hann window blending and computes calibrated hybrid detection score $s_{\mathrm{hybrid}}$. (5) Calibrated Deployment Verdict: Binary localization mask at threshold $t_{\mathrm{mask}}=0.35$ and global authenticity decision at threshold $\tau^*=0.5550$.}
 \label{fig:framework_flowchart}
 \end{figure*}
@@ -155,6 +155,7 @@ The individual loss terms are defined as follows:
 The full inference procedure is formalized in Algorithm~\ref{alg:inference}. Given an unconstrained image $I$, the global resized view produces $s_{\mathrm{whole}}$. The sliding native tiles $\{P_k\}_{k=1}^K$ are processed with bidirectional horizontal-flip TTA, and overlapping predictions are merged using 2D Hann spatial blending weights $w(x)$ to eliminate boundary edge seams:
 \begin{equation}
     \hat{M}(x) = \frac{\sum_{k=1}^K w(x - x_k) \cdot \hat{P}_k(x)}{\sum_{k=1}^K w(x - x_k)}, \quad x \in \Omega
+    \label{eq:hann_blend}
 \end{equation}
 The pooled local anomaly score $s_{\mathrm{pool}}$ is computed as the mean of the top 100 highest pixel values in $\hat{M}$. The final hybrid decision score is formulated as:
 \begin{equation}

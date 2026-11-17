@@ -28,6 +28,8 @@ runs/**/*.pt
 runs/**/*.pth
 runs/**/*.bin
 runs/**/features_cache.pt
+runs/
+controlled_localization/runs/
 
 # Raw datasets, images, and heavy media (keep git repo code/reports only)
 *.jpg
@@ -40,6 +42,7 @@ runs/**/features_cache.pt
 *.mp4
 *.avi
 *.mov
+!paper_work/manuscript/figures/*
 baseline_work/data/
 controlled_localization/runs/**/data/
 research_data/
