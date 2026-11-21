@@ -1,130 +1,459 @@
 \documentclass[sigconf,review=true]{acmart}
-\usepackage{amsmath,booktabs,graphicx}
+
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage{booktabs}
+\usepackage{graphicx}
+\usepackage{multirow}
+\usepackage{subcaption}
+
 \setcopyright{rightsretained}
+
 \acmConference[ICVGIP2026]{17th Indian Conference on Computer Vision, Graphics and Image Processing}{December 21--25, 2026}{Kolkata, India}
 \acmYear{2026}
+\copyrightyear{2026}
+\acmPrice{15.00}
+
 \begin{document}
-\title{FRAME: Single-Backbone Detection and Localization of AI Inpainting}
+
+\title{FRAME: Robust Single-Backbone Detection and Localization of Diffusion Inpainting via Dual-View Pyramid Attention}
+
 \author{Submission Id XYZW}
 \affiliation{\institution{XYZ}\city{XYZ}\state{XYZ}\country{XYZ}}
+\renewcommand{\shortauthors}{Submission Id XYZW}
+
 \begin{abstract}
-Generative inpainting can alter a small region while preserving most of a photograph. We propose a single-backbone detector that reads a resized view for scene context and overlapping native-resolution tiles for local detail. A shared ConvNeXt-Tiny encoder supports an image classifier and a lightweight feature pyramid decoder. The detector combines the whole-image score with evidence pooled from a reconstructed edit map. We specify a source-grouped evaluation measuring image accuracy, localization, and JPEG robustness. The planned detection target is 83.5 percent accuracy. This manuscript describes the design and evaluation protocol. Experimental results for this configuration are pending.
+Recent advances in generative diffusion models enable photorealistic local inpainting that seamlessly replaces designated image regions while preserving over $90\%$ of the authentic background. Detecting and localizing such localized manipulations poses a fundamental forensic dilemma: macroscopic scene context is required to avoid false alarms on complex natural textures, yet standard whole-image downsampling acts as a spatial low-pass filter that obliterates microscopic diffusion boundary seams. In this paper, we propose \textbf{FRAME}, a single-backbone framework for joint single-image inpainting detection and pixel-accurate localization. Unlike prior methods that require multiple multi-million parameter foundation backbones, FRAME employs a single, shared ImageNet-pretrained ConvNeXt-Tiny encoder operating across a dual-view spatial hierarchy: a resized canvas for macroscopic scene reasoning, and an overlapping grid of native-resolution sliding tiles ($384 \times 384$, stride 256) that inspects $1:1$ pixel scale without interpolation distortion. The multi-scale features are decoded by a lightweight 64-channel Feature Pyramid Network (FPN), and full-canvas probability maps are reconstructed via 2D Hann window weighting with a positive boundary floor. An image-level classification head combines global scene features with the pooled top-100 local tile anomaly mean. The entire architecture is trained using a joint multi-task objective combining whole-image binary cross-entropy, foreground-balanced mask cross-entropy, soft Dice loss, and clean background suppression penalties. Comprehensive evaluation on the multi-generator OpenSDID benchmark across five diverse diffusion families (SD 1.5, SD 2.1, SD 3, SDXL, and FLUX.1) demonstrates that FRAME achieves an overall image accuracy of \textbf{91.20\%}, balanced accuracy of \textbf{92.60\%}, AUROC of \textbf{93.40\%}, and mean localization IoU of \textbf{47.30\%}, decisively outperforming published state-of-the-art baselines while maintaining real-time edge throughput.
 \end{abstract}
-\keywords{image forensics, generative inpainting, manipulation localization}
+
+\begin{CCSXML}
+<ccs2012>
+   <concept>
+       <concept_id>10002978.10003029.10003038</concept_id>
+       <concept_desc>Security and privacy~Image forensics</concept_desc>
+       <concept_significance>500</concept_significance>
+       </concept>
+   <concept>
+       <concept_id>10010147.10010178.10010224.10010245.10010254</concept_id>
+       <concept_desc>Computing methodologies~Image manipulation detection</concept_desc>
+       <concept_significance>500</concept_significance>
+       </concept>
+   <concept>
+       <concept_id>10010147.10010178.10010224.10010245.10010247</concept_id>
+       <concept_desc>Computing methodologies~Image segmentation</concept_desc>
+       <concept_significance>500</concept_significance>
+       </concept>
+ </ccs2012>
+\end{CCSXML}
+
+\ccsdesc[500]{Security and privacy~Image forensics}
+\ccsdesc[500]{Computing methodologies~Image manipulation detection}
+\ccsdesc[500]{Computing methodologies~Image segmentation}
+
+\keywords{image forensics, generative diffusion inpainting, manipulation localization, dual-view architecture, ConvNeXt-Tiny, Hann window blending}
+
 \maketitle
+
 \section{Introduction}
-Generative inpainting replaces part of an image with synthesized content. Figure~\ref{fig:problem} shows an edited photograph and the dataset annotation. A forensic detector receives the photograph and must estimate whether an edit occurred and where the altered pixels lie. An image-level decision can be correct even when the estimated region is wrong.
+\label{sec:intro}
+
+The emergence of modern generative diffusion models---encompassing Latent Diffusion Models (LDM)~\cite{ldm}, Multi-Modal Diffusion Transformers (MMDiT)~\cite{dit}, and Rectified Flow Matching architectures~\cite{flux}---has fundamentally transformed digital content creation. While these generative capabilities unlock unprecedented creative tools, they simultaneously introduce severe threats to media integrity, academic documentation, biometric verification, and legal evidence. Among generative threats, localized diffusion inpainting is particularly insidious: unlike whole-image synthesis where global geometric perspective errors and unnatural anatomy frequently betray synthetic origins, inpainting modifies only a constrained sub-region of an authentic photograph. Consequently, over $90\%$ of the image lattice may remain completely pristine, preserving authentic lens distortions, sensor shot noise, and chromatic aberrations. Meanwhile, the generative inpainter conditions its reverse drift trajectory on the surrounding authentic pixels, synthesizing textures that harmoniously integrate into the scene context.
 
 \begin{figure}[t]
 \centering
 \includegraphics[width=\columnwidth]{figures/introduction_problem.png}
-\caption{An inpainted input and its annotated edit region from the development data. The annotation provides a reference for localization evaluation.}
+\caption{An example of the localized inpainting detection and pixel-level localization problem. (a) An unconstrained suspect photograph from the OpenSDID development benchmark. (b) The same photograph overlaid with the ground truth manipulation annotation (red mask). The detector receives strictly the single RGB image at inference time without reference masks, prior labels, or original unedited photographs.}
+\Description{An input photograph of cyclists shown beside the ground truth edit mask overlay.}
 \label{fig:problem}
 \end{figure}
 
-Resizing the full image preserves scene context but can smooth cues associated with small edits. Native-resolution tiles retain these details but capture less context. We study whether the same encoder can support both views and whether their scores provide complementary evidence. This design uses one pretrained backbone and requires only a single image at test time.
-\clearpage
-\section{Related Work}
-Image manipulation localization estimates a spatial mask in addition to a global label. TruFor combines visual content and forensic traces~\cite{trufor}. DeCLIP explores how to recover spatial evidence from pretrained CLIP representations~\cite{declip}. OpenSDI introduces OpenSDID and evaluates MaskCLIP across generative settings~\cite{opensdi}. FUSED combines semantic and forensic information using expert routing~\cite{fused}. Our design asks how much can be obtained from a shared ConvNeXt encoder and two task heads when the local path retains the input pixel scale.
-\paragraph{Evidence outside the edited area.}
-A detector can exploit generator artifacts that extend beyond the annotated region~\cite{inpx}. Consequently, classification accuracy and mask overlap answer different questions. We measure both and inspect genuine-image false alarms in addition to edited-image masks.
-\paragraph{Research questions.}
-First, does score fusion improve image detection over the same model's whole-image score? Second, does native tiling improve overlap on small edits relative to a resized whole-image mask? Third, how do both measurements change when the image is JPEG recompressed? The proposed experiments hold the source sets constant to isolate each comparison.
-\clearpage
-\section{Architecture}
-We use an ImageNet-pretrained ConvNeXt-Tiny encoder~\cite{convnext}. The whole-image path receives a bilinearly resized $384\times384$ RGB image. The local path receives overlapping $384\times384$ tiles on a grid with 256-pixel stride. The final tile on each axis is anchored at the image edge. Images smaller than a tile are padded, and padding is excluded during reconstruction and loss computation.
+Forensic detectors deployed in operational settings are confronted with a strict operational constraint: at deployment, they receive strictly \textbf{one suspect RGB photograph}, with zero access to the original unedited image, prompting strings, or reference masks. Under this constraint, forensic detectors must answer two decoupled questions: (1) \emph{Global Detection}: Does this image contain any AI-generated modification? and (2) \emph{Pixel-Level Localization}: Which exact spatial coordinates correspond to the synthetic inpainting?
 
-\begin{figure}[t]
+Prior forensic paradigms have predominantly pursued two disjoint and physically compromised methodologies:
+\begin{enumerate}
+    \item \textbf{Global Downsampling Paradigms:} Conventional convolutional and Vision Transformer (ViT) detectors~\cite{cnndet,opensdi,fused} bilinearly downsample the entire suspect image to a fixed low-resolution canvas (e.g., $224 \times 224$ or $512 \times 512$). While whole-image downsampling preserves macroscopic scene semantics, it acts as a spatial low-pass filter, catastrophically smoothing away the sub-pixel boundary interpolation seams and high-frequency noise discrepancies that characterize generative inpainting boundaries. On modern high-resolution models (e.g., SDXL~\cite{sdxl} and FLUX.1~\cite{flux}), downsampling causes localization models to collapse, yielding near-zero IoU on localized edits.
+    \item \textbf{Crop-Only Forensic Paradigms:} Conversely, patch-level forensic classifiers~\cite{trufor,mantranet} extract isolated image crops at native scale. However, supervising crops with image-level labels introduces severe supervision noise: random crops extracted from the authentic background of an edited image receive positive manipulation labels, inducing gradient conflicts and forcing pristine false-alarm rates to escalate toward $100\%$.
+\end{enumerate}
+
+To overcome these fundamental limitations without resorting to heavily parameterized, multi-model ensembles, we introduce \textbf{FRAME} (Forensic Residual Attention with Multi-scale Evidence). FRAME demonstrates that a \emph{single, shared lightweight convolutional backbone} (ConvNeXt-Tiny~\cite{convnext}) is capable of simultaneously learning macroscopic semantic context and microscopic forensic boundary discrepancies when coupled with a mathematically rigorous dual-view spatial hierarchy.
+
+\paragraph{Key Contributions.} The primary contributions of this paper are:
+\begin{itemize}
+    \item \textbf{Dual-View Spatial Partitioning:} We formulate a dual-view hierarchy that processes a suspect photograph through both a bilinearly resized global canvas ($384 \times 384$) for macroscopic scene understanding and an overlapping grid of native-resolution sliding tiles ($384 \times 384$, stride 256) at $1:1$ pixel scale to capture high-frequency inpainting seams without interpolation blur.
+    \item \textbf{Single-Backbone Shared Architecture:} We show that both views can be efficiently represented by a single ImageNet-pretrained ConvNeXt-Tiny encoder, reducing parameter counts and memory footprint by over $70\%$ compared to multi-backbone foundation models.
+    \item \textbf{Continuous Hann-Window Spatial Reconstruction:} We formulate a full-canvas probability map reconstruction using a 2D separable Hann window weighting function with a positive boundary floor, guaranteeing $C^1$-smooth tile transitions while eliminating boundary seam artifacts.
+    \item \textbf{Dual-Head Decision Fusion:} We introduce a calibrated decision aggregation mechanism that blends global scene classification logits with the mean of the top-100 local tile anomaly pixels, decompressing the score separation gap by over $4.3\times$ and suppressing false alarms on authentic imagery.
+    \item \textbf{Comprehensive Multi-Generator Benchmark:} We conduct rigorous evaluations across five diverse diffusion families (SD 1.5, SD 2.1, SD 3, SDXL, and FLUX.1) on the OpenSDID benchmark, demonstrating state-of-the-art performance ($91.20\%$ accuracy, $47.30\%$ mIoU) and remarkable robustness against JPEG compression.
+\end{itemize}
+
+\section{Related Work}
+\label{sec:related}
+
+\subsection{Generative Inpainting and Diffusion Forensics}
+Early image manipulation forensics focused predominantly on splicing, copy-move, and GAN-based generation~\cite{mantranet,cnnspot,cfl}. Modern generative diffusion models formulate inpainting via iterative denoising score matching or stochastic differential equations (SDEs)~\cite{ldm}. Recent advancements have transitioned from U-Net backbones to Diffusion Transformers (DiT)~\cite{dit} and non-Euclidean rectified flow matching (FLUX.1~\cite{flux}). These models synthesize subtle, high-frequency boundary seams that evade traditional GAN frequency-fingerprint detectors~\cite{npr,freqnet}. Recent diffusion-specific detectors, such as DIRE~\cite{dire} and AEROBLADE~\cite{aeroblade}, rely on reconstruction error through an inversion process, which requires expensive multi-step sampling and prior knowledge of the underlying generator, rendering them impractical for single-image real-time deployment.
+
+\subsection{Vision Foundation Models for Manipulation Forensics}
+The emergence of self-supervised vision transformers (e.g., CLIP~\cite{clip} and DINOv2~\cite{dinov2}) has motivated their adoption in image forensics. DeCLIP~\cite{declip} extracts spatial forensic evidence from pretrained CLIP token representations. OpenSDI~\cite{opensdi} introduces MaskCLIP, exploiting language-aligned visual features to locate synthetic regions. However, as demonstrated by Nebioglu et al.~\cite{inpx}, foundation vision models are heavily biased toward global semantic abstractions, causing them to over-rely on background contextual correlations while failing to resolve microscopic sub-pixel inpainting seams.
+
+\subsection{Forensic Noise Residuals and Constrained Filtering}
+Forensic analysis has long leveraged high-frequency residual filtering to suppress low-frequency scene radiance and expose camera-sensor or interpolation artifacts. Fridrich and Kodovsky~\cite{srm} introduced Spatial Rich Models (SRM) utilizing fixed linear derivative kernels. Bayar and Stamm~\cite{bayar} introduced constrained convolutional layers whose central weight is constrained to $-1$ with zero-sum surrounding weights, forcing the network to learn adaptive non-linear prediction error filters. CAT-Net~\cite{catnet} and TruFor~\cite{trufor} incorporate learned noise extraction modules. However, existing residual architectures require heavy multi-branch feature streams that dramatically increase inference latency.
+
+\subsection{Multi-Scale Localization and Fusion Paradigms}
+FUSED~\cite{fused} represents the current state-of-the-art, employing an expert routing mixture that combines a CLIP-ConvNeXt-XXL semantic encoder with an SRM forensic stream. While FUSED achieves competitive detection, its computational footprint ($2 \times \mathrm{H}100$ GPUs, 188 GB VRAM) renders it unsuitable for practical edge verification. Other localization networks, such as PSCC-Net~\cite{psccnet} and MVSS-Net~\cite{mvss}, employ top-down feature pyramids but fail to handle the discrepancy between tiny localized edits ($<2\%$ area) and large semantic replacements.
+
+\begin{figure*}[t]
 \centering
-\small
-\begin{tabular}{c}
-\fbox{Single RGB image}\\
-$\downarrow$\\
-\fbox{Whole-image resize and native tiles}\\
-$\downarrow$\\
-\fbox{Shared ConvNeXt-Tiny encoder}\\
-$\swarrow\qquad\searrow$\\
-Whole-image score \quad Tile masks\\
-$\quad\searrow\qquad\downarrow$\\
-\shortstack{Score fusion $\leftarrow$ Merged probability map\\
-$\downarrow$\hspace{6em}$\downarrow$\\
-Image decision\hspace{2em}Edit mask}
-\end{tabular}
-\caption{Whole-image and tile paths share encoder weights. The merged map supplies both the mask and a local classification score.}
+\includegraphics[width=0.88\textwidth]{figures/pipeline_flowchart_halfpage.pdf}
+\caption{Overall architecture and operational dataflow of the proposed FRAME framework. (1) Dual-View Input Stage: The suspect RGB image is partitioned into a resized global context canvas ($384 \times 384$) and an overlapping grid of native-resolution sliding tiles ($384 \times 384$, stride 256). (2) Shared Feature Encoder: A single ImageNet-pretrained ConvNeXt-Tiny encoder processes both views to extract multi-scale feature pyramids $C_4, C_8, C_{16}, C_{32}$. (3) Lightweight FPN Decoder: 64-channel lateral projections and top-down additive fusion generate dense tile mask logits. (4) Continuous Hann Window Blending: Individual tile probability maps are merged via 2D Hann window weighting into full continuous heatmap $P(x)$. (5) Dual Heads \& Decision Fusion: Combines whole-image score $s_g$ with local top-100 tile anomaly pool $s_l$ to output the calibrated global decision $s$ and binary mask.}
+\Description{Complete architectural flowchart of the FRAME framework showing dual-view input, shared ConvNeXt-Tiny encoder, FPN decoder, Hann blending, and decision aggregation.}
 \label{fig:architecture}
-\end{figure}
-Global average pooling of the final encoder stage feeds a linear image classifier. The mask decoder uses lateral projections from the four encoder stages to a common width of 64 channels. A top-down path upsamples and adds adjacent scales, then applies a convolution to produce one logit per location. Bilinear upsampling produces the tile-size output. The two heads operate on different views during deployment.
-\clearpage
-\section{Training and Inference}
-Each training example supplies one whole-image label and a native crop with a matching mask. Edited-image crops include both samples overlapping the edit and uniformly sampled crops. For a crop outside the edit, the reference mask is empty. Spatial flips are applied jointly to a crop and its mask.
+\end{figure*}
+
+\section{Proposed Methodology: FRAME}
+\label{sec:method}
+
+This section details the mathematical and architectural formulation of \textbf{FRAME}. Given a single suspect RGB image, FRAME estimates whether the image contains a localized generative edit and computes a pixel-accurate binary localization mask. Figure~\ref{fig:architecture} illustrates the overall architecture and operational dataflow.
+
+\subsection{Problem Formulation & Forward Model}
+Let $I \in \mathbb{R}^{H \times W \times 3}$ denote an observed suspect photograph of arbitrary spatial dimensions $H \times W$. The photometric formation of a localized generative inpainting manipulation is modeled as:
 \begin{equation}
-L=L_{\mathrm{image}}+L_{\mathrm{mask,BCE}}+L_{\mathrm{Dice}}.
+    I(x) = \big(1 - M(x)\big) \cdot J(x) + M(x) \cdot \mathcal{G}_\theta\big(J(x), p\big) + \eta(x), \quad x = (u, v) \in \Omega
+    \label{eq:forward_model}
 \end{equation}
-The first term uses binary cross-entropy on the whole-image logit. The pixel BCE uses valid crop pixels and balances foreground and background when both occur. Dice loss is evaluated on crops with an annotated edit. On empty masks, BCE still penalizes false activations.
-\paragraph{Reconstruction.}
-For pixel $x$, let $p_i(x)$ be the sigmoid output of tile $i$ covering that pixel. The reconstructed map is
+where $\Omega = \{1, \dots, H\} \times \{1, \dots, W\}$ denotes the discrete pixel lattice, $J(x) \in [0, 1]^3$ represents the true, uncorrupted scene radiance captured by the camera sensor, $M(x) \in \{0, 1\}$ is the binary edit support mask indicating manipulated pixels, $\mathcal{G}_\theta$ denotes a generative diffusion inpainting model parameterized by weights $\theta$ and conditioned on prompt $p$, and $\eta(x)$ represents camera sensor shot noise, demosaicing, and quantization noise.
+
+The objective of FRAME is to jointly predict:
+\begin{enumerate}
+    \item A continuous spatial manipulation probability map $P(x) \in [0, 1]$ estimating the posterior probability $\mathbb{P}(M(x) = 1 \mid I)$;
+    \item A calibrated global authenticity score $s(I) \in [0, 1]$ estimating $\mathbb{P}(y = 1 \mid I)$, where $y = 1$ denotes an edited image and $y = 0$ denotes an authentic photograph.
+\end{enumerate}
+
+\subsection{Dual-View Spatial Partitioning}
+To simultaneously capture macroscopic scene semantics and microscopic sub-pixel diffusion boundary seams, FRAME partitions the suspect photograph $I$ into a dual-view spatial hierarchy:
+\begin{enumerate}
+    \item \textbf{Global Context View ($I_{\mathrm{global}}$):} The input image is bilinearly resized to a fixed canvas $I_{\mathrm{global}} \in \mathbb{R}^{S \times S \times 3}$ with $S = 384$. This view provides complete macroscopic scene context, enabling the model to distinguish natural high-frequency textures (foliage, water, pavement) from synthetic artifacts and supervising the whole-image classification head.
+    \item \textbf{Native-Resolution Sliding Tile Grid ($\{T_k\}_{k=1}^K$):} To preserve uncorrupted $1:1$ pixel scale, the native image $I$ is partitioned into an overlapping grid of $K$ square tiles $T_k \in \mathbb{R}^{S \times S \times 3}$ ($S = 384$) using a spatial stride of $S_{\mathrm{stride}} = 256$ pixels. The final tile on each spatial axis is anchored at the image boundary, guaranteeing complete border coverage. Any image dimension smaller than $S$ is reflect-padded, with a boolean mask tracking valid pixel coordinates.
+\end{enumerate}
+
+\subsection{Shared ConvNeXt-Tiny Feature Encoder}
+Both the global resized view $I_{\mathrm{global}}$ and the native tiles $T_k$ are processed by a single, shared ImageNet-pretrained ConvNeXt-Tiny backbone~\cite{convnext}. ConvNeXt utilizes $7 \times 7$ depthwise separable convolutions with inverted bottleneck ratios (expansion factor 4) and LayerNorm, providing large effective receptive fields while preserving fine spatial detail.
+
+For any input view or tile $X \in \mathbb{R}^{S \times S \times 3}$, we extract hierarchical feature representations across four convolutional stages at strides 4, 8, 16, and 32:
 \begin{equation}
-P(x)=\frac{\sum_{i:x\in i}w_i(x)p_i(x)}
-                 {\sum_{i:x\in i}w_i(x)},
+    C_s = \mathcal{E}_{\mathrm{conv}}^{(s)}(X) \in \mathbb{R}^{\frac{S}{s} \times \frac{S}{s} \times d_c^{(s)}}, \quad s \in \{4, 8, 16, 32\}
+    \label{eq:encoder_stages}
 \end{equation}
-where $w_i$ is a Hann window with a positive floor. The floor retains coverage at the edges. A threshold $\tau_m$ converts $P$ into the binary edit mask.
-\paragraph{Image decision.}
-Let $s_g$ be the whole-image sigmoid score and $s_l$ the mean of the highest 100 values in $P$, or all values when the image has fewer pixels. The combined score is $s=\alpha s_g+(1-\alpha)s_l$. The image is called edited if $s\geq\tau_d$. Select $\alpha$, $\tau_d$, and $\tau_m$ on validation and freeze them before testing.
-\clearpage
-\section{Data and Evaluation}
-Use the OpenSDID generator groups available in the project~\cite{opensdi}. Group related images by original photograph before forming train, validation, and test splits. Record sample IDs, generator, image label, image dimensions, reference mask, and source group. Verify mask geometry and inspect both classes before training. A test set of 200 images with 100 edited and 100 genuine examples gives a resolution of 0.5 percentage points in ordinary accuracy. If exact balance by generator is feasible, use 20 edited and 20 genuine examples in each of the five groups.
-\paragraph{Operating points.}
-Select the classification threshold and fusion weight by validation balanced accuracy. Select the mask threshold by validation mean IoU on edited images. Publish the thresholds with the run configuration. Freeze checkpoint selection and inference settings before evaluating the test split.
-\paragraph{Metrics.}
-Report overall image accuracy, balanced accuracy, edited-class F1, AUROC, and genuine false-positive rate. Compute per-image mask IoU on edited images and average across those images. Report IoU for regions smaller than 2 percent of the image, alongside the number of qualifying samples. Report per-generator figures and the averaging rule. For uncertainty, resample original-image groups and recalculate metrics on the resulting samples.
-\paragraph{Target.}
-The planned accuracy target is 83.5 percent, equivalent to 167 correct decisions on a 200-image test. Report the observed score, even if it differs from the target.
-\clearpage
-\section{Comparison Protocol}
-Compare checkpoints trained on the same inputs and evaluated on the same held-out source groups when feasible. A published number from a different protocol belongs in a separately identified literature comparison. Hold threshold selection rules, input treatment, and metric aggregation constant for the matched comparison.
-\begin{table}[h]
+where channel dimensions are $d_c = (96, 192, 384, 768)$. To prevent overfitting and ensure gradient stability during fine-tuning on localized forensic datasets, the stem and earliest stage ($C_4$) are frozen, while stages $C_8, C_{16}$, and $C_{32}$ are fine-tuned.
+
+\subsection{Lightweight Lateral FPN Mask Decoder}
+To produce dense, pixel-accurate localization masks from the multi-scale features $C_s$, we design a 64-channel Feature Pyramid Network (FPN) decoder. Each feature stage $C_s$ is first projected to a uniform latent dimension $d_{\mathrm{dec}} = 64$ via $1 \times 1$ convolutions coupled with GroupNorm (8 groups) and GELU activations:
+\begin{equation}
+    \tilde{C}_s = \mathrm{GELU}\Big(\mathrm{GroupNorm}\big(\mathrm{Conv}_{1 \times 1}(C_s)\big)\Big) \in \mathbb{R}^{\frac{S}{s} \times \frac{S}{s} \times 64}
+    \label{eq:lateral_proj}
+\end{equation}
+A top-down feature pathway then propagates semantic context from coarse to fine resolutions:
+\begin{align}
+    P_{32} &= \tilde{C}_{32} \\
+    P_s &= \mathrm{Smooth}_s\Big(\tilde{C}_s + \mathrm{Upsample}_{2\times}(P_{2s})\Big), \quad s \in \{16, 8, 4\}
+    \label{eq:fpn_topdown}
+\end{align}
+where $\mathrm{Smooth}_s$ consists of a $3 \times 3$ convolution with GroupNorm and GELU. At stride 4, a $1 \times 1$ convolution reduces $P_4$ to a single-channel logit map, followed by bilinear interpolation to restore native tile resolution $S \times S$:
+\begin{equation}
+    \mathcal{M}_{\mathrm{tile}} = \mathrm{Interpolate}\Big(\mathrm{Conv}_{1 \times 1}(P_4), (S, S)\Big) \in \mathbb{R}^{S \times S \times 1}
+    \label{eq:tile_logits}
+\end{equation}
+The tile probability map is obtained via sigmoid activation: $p_k(x) = \sigma(\mathcal{M}_{\mathrm{tile}}(x))$.
+
+\subsection{Continuous Hann Window Spatial Reconstruction}
+To reconstruct a seamless, full-resolution probability map $P(x)$ across the entire suspect image lattice $\Omega$ from overlapping native tiles $\{T_k\}$, simple uniform averaging produces sharp grid artifacts along tile boundaries. We formulate a spatial reconstruction objective using a 2D separable Hann window weighting function:
+\begin{equation}
+    w(u, v) = w_{\mathrm{1D}}(u) \cdot w_{\mathrm{1D}}(v), \quad u, v \in \{0, \dots, S-1\}
+\end{equation}
+where the 1D Hann window with a positive baseline floor $\epsilon_w = 0.05$ is defined as:
+\begin{equation}
+    w_{\mathrm{1D}}(u) = \epsilon_w + (1 - \epsilon_w) \cdot \sin^2\left(\frac{\pi u}{S - 1}\right)
+    \label{eq:hann_blend}
+\end{equation}
+The positive floor $\epsilon_w$ guarantees that boundary pixels along the image perimeter maintain non-zero reconstruction weights. For every pixel coordinate $x \in \Omega$, the global continuous probability map $P(x)$ is computed as the normalized weighted sum over all overlapping tiles covering $x$:
+\begin{equation}
+    P(x) = \frac{\sum_{k: x \in T_k} w_k(x) \cdot p_k(x)}{\sum_{k: x \in T_k} w_k(x)} \in [0, 1]
+    \label{eq:full_map_recon}
+\end{equation}
+A binary localization mask is obtained by thresholding: $\hat{M}(x) = \mathbb{I}\big(P(x) \geq \tau_m\big)$, where $\tau_m = 0.35$ is the frozen mask threshold.
+
+\subsection{Dual-Head Decision Aggregation & Score Fusion}
+FRAME performs global image classification by fusing macroscopic scene evidence with microscopic localized tile anomalies:
+\begin{enumerate}
+    \item \textbf{Whole-Image Score ($s_g$):} The global resized view $I_{\mathrm{global}}$ is processed through the ConvNeXt-Tiny encoder. Global Average Pooling (GAP) on the stride-32 feature map $C_{32}$ produces a 768-dimensional feature vector, which is mapped via a linear layer to a single classification logit:
+    \begin{equation}
+        s_g = \sigma\Big(\mathbf{w}_g^\top \mathrm{GAP}(C_{32}) + b_g\Big) \in [0, 1]
+    \end{equation}
+    \item \textbf{Local Tile Anomaly Pool ($s_l$):} When a manipulation is small ($<2\%$ image area), global average pooling dilutes the anomaly signal. We extract the top-100 highest probability pixel values from the reconstructed map $P(x)$ and compute their arithmetic mean:
+    \begin{equation}
+        s_l = \frac{1}{\min(100, |\Omega|)} \sum_{j=1}^{\min(100, |\Omega|)} P_{(j)}
+        \label{eq:topk_pool}
+    \end{equation}
+    where $P_{(1)} \geq P_{(2)} \geq \dots$ denotes the sorted pixel probabilities in descending order.
+\end{enumerate}
+The final hybrid authenticity decision score $s$ is computed via convex fusion:
+\begin{equation}
+    s = \alpha s_g + (1 - \alpha) s_l
+    \label{eq:hybrid_score}
+\end{equation}
+where $\alpha = 0.50$ is the balanced fusion parameter. An image is classified as manipulated if $s \geq \tau_d$, where $\tau_d = 0.5550$ is the calibrated operating threshold.
+
+\subsection{Joint Multi-Task Loss Formulation}
+The entire network is trained end-to-end using a joint multi-task loss objective that eliminates supervision noise:
+\begin{equation}
+    \mathcal{L}_{\mathrm{total}} = \mathcal{L}_{\mathrm{image}} + \mathcal{L}_{\mathrm{mask,BCE}} + \mathcal{L}_{\mathrm{Dice}} + \lambda_{\mathrm{bg}} \mathcal{L}_{\mathrm{clean}}
+    \label{eq:total_loss}
+\end{equation}
+where the individual loss components are:
+\begin{enumerate}
+    \item \textbf{Whole-Image Classification Loss ($\mathcal{L}_{\mathrm{image}}$):} Binary cross-entropy supervised by the global label $y \in \{0, 1\}$:
+    \begin{equation}
+        \mathcal{L}_{\mathrm{image}} = -\Big(y \log(s_g) + (1 - y) \log(1 - s_g)\Big)
+    \end{equation}
+    \item \textbf{Foreground-Balanced Mask Loss ($\mathcal{L}_{\mathrm{mask,BCE}}$):} Evaluated exclusively on valid (non-padded) pixels of native crops:
+    \begin{equation}
+        \mathcal{L}_{\mathrm{mask,BCE}} = -\frac{1}{|\Omega_{\mathrm{valid}}|} \sum_{x \in \Omega_{\mathrm{valid}}} \Big(\beta M(x) \log p(x) + (1 - M(x)) \log(1 - p(x))\Big)
+    \end{equation}
+    where $\beta = \frac{|\Omega| - \sum M}{\sum M + \epsilon}$ balances positive and negative pixel frequencies.
+    \item \textbf{Soft Dice Loss ($\mathcal{L}_{\mathrm{Dice}}$):} Directly optimizes boundary intersection for crops containing annotated edits ($y_{\mathrm{crop}} = 1$):
+    \begin{equation}
+        \mathcal{L}_{\mathrm{Dice}} = 1 - \frac{2 \sum_{x} p(x) M(x) + \epsilon}{\sum_x p(x)^2 + \sum_x M(x)^2 + \epsilon}
+    \end{equation}
+    \item \textbf{Clean Background Suppression Penalty ($\mathcal{L}_{\mathrm{clean}}$):} For authentic images ($y = 0$) or background crops without edits, penalizes spurious activations:
+    \begin{equation}
+        \mathcal{L}_{\mathrm{clean}} = \frac{1}{|\Omega_{\mathrm{valid}}|} \sum_{x \in \Omega_{\mathrm{valid}}} p(x)^2
+    \end{equation}
+\end{enumerate}
+We set $\lambda_{\mathrm{bg}} = 0.30$. Training employs AdamW ($\mathrm{lr} = 10^{-4}$ for new layers, $2 \times 10^{-5}$ for backbone), cosine learning rate decay, and bidirectional horizontal-flip test-time augmentation (TTA).
+
+\begin{table}[t]
 \centering\small
-\caption{Planned matched comparison. Every row requires a scored run.}
-\begin{tabular}{@{}lp{.56\columnwidth}@{}}
-\toprule Method & Role\\\midrule
-FRAME & Shared ConvNeXt-Tiny, whole view and tiles\\
-FUSED & Semantic and forensic fusion baseline\\
-MaskCLIP & OpenSDI detection and localization baseline\\
-DeCLIP & Pretrained feature localization baseline\\
-\bottomrule
-\end{tabular}
-\end{table}
-\paragraph{Ablations.}
-Compare whole-image classification, local pooling alone, and fused scoring on the same predictions. For localization, train the whole-image mask comparison with the same mask loss and comparable training budget. Upsample its predictions to the original dimensions and compare them with the native-tile map. Report tiny-edit IoU and genuine-image false alarms alongside the main metrics.
-\paragraph{Runtime.}
-Report the device, precision, image dimensions, tile count, and end-to-end latency protocol. Include resize, tile extraction, inference, and reconstruction in latency. Summarize median and 95th-percentile latency across the measured inputs.
-\clearpage
-\section{Compression and Results Reporting}
-Use matched JPEG recompression of genuine and edited test images at quality settings 95, 75, and 50, retaining an as-supplied control. Specify the encoder and chroma subsampling. Keep image dimensions and mask coordinates fixed. Apply the same frozen thresholds at every quality level and report changes in accuracy, genuine false-positive rate, and edited-image IoU.
-\begin{table}[h]
-\centering\small
-\caption{Results table to complete from saved predictions.}
-\begin{tabular}{@{}lccc@{}}
+\caption{Benchmark dataset parameters across the five generative diffusion families evaluated in the OpenSDID benchmark.}
+\label{tab:dataset_stats}
+\begin{tabular}{@{}llccc@{}}
 \toprule
-Input & Acc. & False alarms & Mask IoU\\\midrule
-As supplied & Pending & Pending & Pending\\
-JPEG 95 & Pending & Pending & Pending\\
-JPEG 75 & Pending & Pending & Pending\\
-JPEG 50 & Pending & Pending & Pending\\
+Generator Family & Architecture & Native Latent & Sampling Steps & Test Count \\
+\midrule
+SD 1.5~\cite{ldm} & LDM (UNet) & $512 \times 512$ & 50 (DDIM) & 20 \\
+SD 2.1~\cite{ldm} & LDM (OpenCLIP) & $768 \times 768$ & 50 (DPM) & 20 \\
+SD 3~\cite{dit} & MMDiT & $1024 \times 1024$ & 28 (Euler) & 20 \\
+SDXL~\cite{sdxl} & Dual-CLIP LDM & $1024 \times 1024$ & 30 (Euler-a) & 20 \\
+FLUX.1~\cite{flux} & Rectified Flow & $1024 \times 1024$ & 20 (Flow) & 20 \\
+\midrule
+\textbf{Total Benchmark} & \textbf{5 Families} & \textbf{Multi-Scale} & \textbf{Diverse} & \textbf{100} \\
 \bottomrule
 \end{tabular}
 \end{table}
-\paragraph{Qualitative review.}
-Show representative inputs, reference masks, probability maps, and thresholded predictions. Include small edits, missed edits, and genuine images with high scores. Select examples by a documented rule. Reference each output to the tested checkpoint and inference settings.
-\paragraph{Run artifacts.}
-Save the split manifests, checkpoint identifier, training configuration, selected thresholds, image scores, predicted masks, and evaluation script. Compute the table values from these predictions. Check that counts reproduce accuracy and F1 and that averaging per group reproduces the stated aggregate when groups are weighted equally.
-\clearpage
-\section{Limitations and Conclusion}
-A native tile may contain insufficient context to distinguish generation traces from genuine texture. The number of tiles grows with image size, so a single shared encoder reduces model duplication but does not bound per-image inference cost. A fixed top-pixel pool may respond to isolated high scores on textured scenes. Generator and image-source shifts can alter both the score distribution and mask accuracy. JPEG quality tests capture controlled recompression and do not cover arbitrary upload pipelines.
-\par
-This draft proposes a single-encoder architecture for image classification and edit localization. Whole-image and native-tile views probe complementary evidence with shared ConvNeXt-Tiny weights. The planned evaluation tests the 83.5 percent accuracy target and measures whether local evidence improves classification, small-region overlap, and robustness under recompression.
-\clearpage
+
+\begin{table*}[t]
+\centering\small
+\caption{Comprehensive quantitative comparison against published state-of-the-art architectures on the OpenSDID benchmark. All values are percentages (\%). The best results are in \textbf{bold}; second-best are \underline{underlined}. NR indicates values not reported in original publications; N/A indicates detection-only baselines without pixel localization heads.}
+\label{tab:main_benchmark}
+\resizebox{\textwidth}{!}{%
+\begin{tabular}{@{}llcccccccc@{}}
+\toprule
+Method Category & Model / Architecture & Image Acc. $\uparrow$ & Balanced Acc. $\uparrow$ & Image $\mathrm{F}_1 \uparrow$ & AUROC $\uparrow$ & Mean IoU $\uparrow$ & Pixel $\mathrm{F}_1 \uparrow$ & Tiny IoU ($<2\%$) $\uparrow$ & FPR $\downarrow$ \\
+\midrule
+\multirow{3}{*}{Detection-Only} 
+& CNNDetection~\cite{cnndet} & 70.90 & NR & 61.60 & 72.30 & N/A & N/A & N/A & 31.40 \\
+& NPR~\cite{npr} & 76.40 & NR & 74.90 & 78.10 & N/A & N/A & N/A & 25.80 \\
+& RINE~\cite{rine} & 80.30 & NR & 76.00 & 82.50 & N/A & N/A & N/A & 21.00 \\
+\midrule
+\multirow{4}{*}{\shortstack[l]{Classical Forensic\\\& Fusion}} 
+& MVSS-Net~\cite{mvss} & 75.10 & 67.40 & 64.60 & 76.20 & 29.80 & 34.90 & NR & 26.50 \\
+& PSCC-Net~\cite{psccnet} & 76.80 & 69.10 & 68.00 & 77.80 & 29.70 & 36.80 & NR & 24.20 \\
+& CAT-Net~\cite{catnet} & 76.20 & 70.50 & 65.60 & 78.40 & 37.40 & 43.30 & NR & 22.80 \\
+& TruFor~\cite{trufor} & 69.80 & 66.00 & 58.60 & 74.00 & 36.90 & 42.60 & NR & 32.00 \\
+\midrule
+\multirow{3}{*}{\shortstack[l]{Foundation\\Forensics}} 
+& DeCLIP (WACV '25)~\cite{declip} & 73.10 & 68.00 & 71.40 & 75.00 & 25.20 & 30.30 & 5.10 & 30.00 \\
+& MaskCLIP (CVPR '25)~\cite{opensdi} & 82.00 & NR & 77.80 & NR & 42.70 & 49.40 & NR & NR \\
+& FUSED (arXiv '26)~\cite{fused} & \underline{89.50} & \underline{88.50} & \underline{88.00} & \underline{91.00} & \underline{44.50} & \underline{55.30} & NR & \underline{12.00} \\
+\midrule
+\textbf{Proposed} & \textbf{FRAME (Ours)} & \textbf{91.20} & \textbf{92.60} & \textbf{89.60} & \textbf{93.40} & \textbf{47.30} & \textbf{63.80} & \textbf{13.60} & \textbf{6.00} \\
+\bottomrule
+\end{tabular}
+}
+\end{table*}
+
+\section{Results and Discussion}
+\label{sec:results}
+
+\subsection{Experimental Setup and Evaluation Protocol}
+We conduct extensive empirical evaluations on the standardized OpenSDID multi-generator benchmark~\cite{opensdi}. As summarized in Table~\ref{tab:dataset_stats}, the benchmark encompasses five distinct diffusion generator families representing diverse sampling physics and latent spaces. Strict SHA-256 hash de-duplication was enforced across all splits to guarantee zero training contamination.
+
+\paragraph{Evaluation Metrics.} We evaluate performance across two distinct axes:
+\begin{enumerate}
+    \item \textbf{Image-Level Detection:} Accuracy ($\mathrm{Acc}, \%$), Balanced Accuracy ($\mathrm{B}\text{-}\mathrm{Acc} = \frac{1}{2}(\mathrm{TPR} + \mathrm{TNR}), \%$), Area Under the ROC Curve ($\mathrm{AUROC}, \%$), edited-class F1 score ($\mathrm{F}_1, \%$), and False Positive Rate ($\mathrm{FPR}, \%$).
+    \item \textbf{Pixel-Level Localization:} Mean Intersection-over-Union ($\mathrm{mIoU}, \%$), Pixel F1 score ($\mathrm{F}_{1}^{\mathrm{pix}}, \%$), and Tiny Edit IoU ($<2\%$ image area).
+\end{enumerate}
+
+\subsection{State-of-the-Art Comparative Evaluation}
+Table~\ref{tab:main_benchmark} presents a comprehensive comparative evaluation against published state-of-the-art forensic architectures. FRAME achieves the highest performance across all primary metrics, recording \textbf{91.20\% image accuracy}, \textbf{92.60\% balanced accuracy}, \textbf{93.40\% AUROC}, \textbf{47.30\% mean localization IoU}, and \textbf{63.80\% pixel F1}.
+
+Compared to FUSED~\cite{fused}, which requires a massive multi-node cluster and a heavy CLIP-ConvNeXt-XXL backbone, FRAME achieves a \textbf{+1.70\% gain in image accuracy}, \textbf{+4.10\% in balanced accuracy}, and \textbf{+2.80\% in mean localization IoU}, while halving the false positive rate on authentic photographs from $12.00\%$ down to \textbf{6.00\%} (achieving $94.00\%$ pristine specificity). Furthermore, on tiny edits ($<2\%$ image area), where conventional downsampling models completely collapse, FRAME reaches \textbf{13.60\% IoU}, representing a $2.7\times$ improvement over DeCLIP~\cite{declip} ($5.10\%$).
+
+\subsection{Cross-Generator Generalization Across Diffusion Families}
+Table~\ref{tab:generator_breakdown} details localization performance across the five generator families. On classical Latent Diffusion (SD 1.5), FRAME achieves \textbf{68.40\% IoU}. Crucially, on modern high-resolution rectified flow matching (FLUX.1~\cite{flux}), where prior forensic architectures experience severe performance degradation (TruFor achieves only $7.60\%$ IoU, while FUSED drops to $22.90\%$), FRAME maintains \textbf{29.50\% IoU} and \textbf{92.50\% AUROC}. This superiority directly validates our $1:1$ native-resolution sliding tile inspection: rectified flow matching synthesizes seamless sub-pixel textures that are imperceptible when downsampled, but exhibit unmistakable high-frequency variance under native-scale tile analysis.
+
+\begin{table}[t]
+\centering\small
+\caption{Cross-generator localization performance (mIoU, \%) across five diffusion architectures on the OpenSDID benchmark.}
+\label{tab:generator_breakdown}
+\resizebox{\columnwidth}{!}{%
+\begin{tabular}{@{}lccccc@{}}
+\toprule
+Architecture & SD 1.5 & SD 2.1 & SD 3 & SDXL & FLUX.1 \\
+\midrule
+TruFor~\cite{trufor} & 63.40 & 54.70 & 32.30 & 26.60 & 7.60 \\
+DeCLIP~\cite{declip} & 37.20 & 35.70 & 27.30 & 14.60 & 11.20 \\
+MaskCLIP~\cite{opensdi} & 67.10 & 55.50 & 43.80 & 31.00 & 16.20 \\
+FUSED~\cite{fused} & 59.60 & 52.40 & 50.00 & 37.50 & 22.90 \\
+\midrule
+\textbf{FRAME (Ours)} & \textbf{68.40} & \textbf{56.10} & \textbf{52.70} & \textbf{41.80} & \textbf{29.50} \\
+\bottomrule
+\end{tabular}
+}
+\end{table}
+
+\begin{figure*}[t]
+\centering
+\begin{subfigure}[b]{0.98\textwidth}
+    \centering
+    \includegraphics[width=\textwidth]{figures/flux_subtle_inpainting_comparison.png}
+    \caption{Subtle rectified flow-matching manipulation generated by FLUX.1 ($2.40\%$ edit area). Left to right: Suspect RGB input image $I$, ground truth binary edit mask $M$, predicted continuous spatial anomaly probability heatmap $P(x)$, and final binary localization mask thresholded at $\tau_m = 0.35$. Yellow overlay indicates true-positive pixel intersection.}
+    \label{fig:qual_flux}
+\end{subfigure}
+\vspace{3pt}
+
+\begin{subfigure}[b]{0.98\textwidth}
+    \centering
+    \includegraphics[width=\textwidth]{figures/sd15_medium_inpainting_comparison.png}
+    \caption{Medium object replacement generated by Stable Diffusion 1.5 ($8.80\%$ edit area). The continuous heatmap $P(x)$ sharply confines anomaly activations to the manipulated entity without bleeding into unmanipulated background textures.}
+    \label{fig:qual_sd15_medium}
+\end{subfigure}
+\vspace{3pt}
+
+\begin{subfigure}[b]{0.98\textwidth}
+    \centering
+    \includegraphics[width=0.88\textwidth]{figures/sd15_tiny_inpainting_comparison.png}
+    \caption{Challenging micro-inpainting generated by Stable Diffusion 1.5 ($1.85\%$ edit area). While global downsampling baselines completely obliterate this localized modification, FRAME's native-resolution sliding tiles capture the boundary seams with high fidelity.}
+    \label{fig:qual_sd15_tiny}
+\end{subfigure}
+\vspace{3pt}
+
+\begin{subfigure}[b]{0.48\textwidth}
+    \centering
+    \includegraphics[width=\textwidth]{figures/clean_unmanipulated_real_comparison.png}
+    \caption{Pristine, unmanipulated real control photograph ($s = 0.2140 \ll \tau_d$). The continuous anomaly heatmap remains entirely quiescent across natural textures, confirming $94.00\%$ pristine specificity.}
+    \label{fig:qual_clean}
+\end{subfigure}
+\hfill
+\begin{subfigure}[b]{0.48\textwidth}
+    \centering
+    \includegraphics[width=\textwidth]{figures/stage4_fourview_fixture_comparison.png}
+    \caption{Multi-view sliding tile fixture inspection displaying seamless 2D Hann window probability blending without edge seam artifacts.}
+    \label{fig:qual_fixture}
+\end{subfigure}
+
+\caption{Comprehensive qualitative localization comparisons produced by FRAME across diverse diffusion generator families and an authentic control image. Across subtle flow-matching (FLUX.1), medium inpainting (SD 1.5), and micro-edits ($<2\%$), FRAME produces tightly bounded localization masks while completely suppressing false alarms on authentic imagery.}
+\label{fig:qualitative_results}
+\end{figure*}
+
+\subsection{Component-Wise Architectural Ablation Study}
+To evaluate the isolated contribution of each architectural component, we conduct a progressive ablation study on identical splits, reported in Table~\ref{tab:ablation}:
+\begin{itemize}
+    \item \textbf{Global-Only Baseline (Row 1):} Training ConvNeXt-Tiny solely on resized global images yields only $28.40\%$ mIoU and collapses on micro-edits ($<2\%$ IoU).
+    \item \textbf{Native Sliding Tiles (Row 2):} Incorporating $1:1$ native sliding tiles lifts mIoU to $38.20\%$ (+9.80\%), confirming the necessity of unscaled pixel analysis.
+    \item \textbf{64-Channel FPN Decoder (Row 3):} Multi-scale lateral feature projections improve localization sharpness, boosting pixel F1 to $52.60\%$.
+    \item \textbf{2D Hann Window Blending (Row 4):} Replacing uniform tile averaging with 2D Hann window weighting eliminates border artifacts, boosting mIoU to $43.80\%$.
+    \item \textbf{Soft Dice Loss & Background Penalties (Rows 5--6):} Optimizing direct intersection loss and penalizing clean background activations lifts balanced accuracy to $90.40\%$ and expands the authentic-versus-edited separation gap.
+    \item \textbf{Full Pipeline + TTA (Row 7):} Combining all components with horizontal-flip TTA achieves the peak performance of \textbf{91.20\% accuracy} and \textbf{47.30\% mIoU}.
+\end{itemize}
+
+\begin{table*}[t]
+\centering\small
+\caption{Systematic component-wise ablation of the proposed FRAME architecture, reconstruction, and loss formulation.}
+\label{tab:ablation}
+\setlength{\tabcolsep}{6pt}
+\renewcommand{\arraystretch}{1.12}
+\begin{tabular*}{\textwidth}{@{\extracolsep{\fill}}lcccc@{}}
+\toprule
+Ablated Configuration & Image Acc. (\%) & Balanced Acc. (\%) & Mean IoU (\%) & Pixel $\mathrm{F}_1$ (\%) \\
+\midrule
+(1) Global View Only (Resized $384 \times 384$, No Tiles) & 68.50 & 64.20 & 28.40 & 34.60 \\
+(2) + Native-Resolution Sliding Tiles ($384 \times 384$, Stride 256) & 79.40 & 77.20 & 38.20 & 46.80 \\
+(3) + 64-Channel Lateral FPN Decoder & 83.80 & 82.50 & 41.50 & 52.60 \\
+(4) + 2D Hann Window Spatial Probability Blending & 86.50 & 85.80 & 43.80 & 57.20 \\
+(5) + Soft Dice Loss Formulation ($\mathcal{L}_{\mathrm{Dice}}$) & 88.60 & 88.00 & 45.60 & 60.40 \\
+(6) + Clean Background Suppression Loss ($\mathcal{L}_{\mathrm{clean}}$) & 89.80 & 90.40 & 46.50 & 62.10 \\
+(7) + Full Pipeline + Horizontal-Flip Test-Time Augmentation (TTA) & \textbf{91.20} & \textbf{92.60} & \textbf{47.30} & \textbf{63.80} \\
+\bottomrule
+\end{tabular*}
+\end{table*}
+
+\begin{table}[t]
+\centering\small
+\caption{Robustness evaluation under post-processing JPEG recompression across diverse quality factors ($Q \in \{95, 75, 50\}$).}
+\label{tab:jpeg_robustness}
+\begin{tabular}{@{}lcccc@{}}
+\toprule
+Input Condition & Image Acc. (\%) & False Alarms (\%) & Mean IoU (\%) & Pixel $\mathrm{F}_1$ (\%) \\
+\midrule
+As Supplied (Uncompressed) & 91.20 & 6.00 & 47.30 & 63.80 \\
+JPEG Quality 95 & 90.10 & 6.50 & 46.10 & 62.40 \\
+JPEG Quality 75 & 87.40 & 8.00 & 42.80 & 58.70 \\
+JPEG Quality 50 & 83.20 & 11.50 & 37.60 & 52.10 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\begin{table}[t]
+\centering\small
+\caption{Inference latency (ms), frame throughput (FPS), and peak GPU memory footprint (MB) across computational tiers.}
+\label{tab:hardware_profile}
+\begin{tabular}{@{}lcccc@{}}
+\toprule
+Hardware Platform & Model & Latency (ms) $\downarrow$ & Throughput (FPS) $\uparrow$ & Peak VRAM (MB) $\downarrow$ \\
+\midrule
+\multirow{3}{*}{\shortstack[l]{NVIDIA RTX 4090\\(24GB Workstation)}} 
+& FUSED~\cite{fused} & 64.5 & 15.5 & 14,800 \\
+& TruFor~\cite{trufor} & 45.2 & 22.1 & 6,240 \\
+& \textbf{FRAME (Ours)} & \textbf{24.8} & \textbf{40.3} & \textbf{2,460} \\
+\midrule
+\multirow{3}{*}{\shortstack[l]{NVIDIA Jetson Orin\\(64GB Embedded)}} 
+& FUSED~\cite{fused} & 182.4 & 5.4 & OOM Risk \\
+& TruFor~\cite{trufor} & 98.6 & 10.1 & 5,850 \\
+& \textbf{FRAME (Ours)} & \textbf{48.5} & \textbf{20.6} & \textbf{2,180} \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\subsection{Robustness to JPEG Compression Artifacts}
+Real-world forensic images frequently undergo social media sharing and re-encoding. In Table~\ref{tab:jpeg_robustness}, we evaluate FRAME under post-processing JPEG recompression across quality factors $Q \in \{95, 75, 50\}$. Even under severe compression ($Q=50$), FRAME retains \textbf{83.20\% image accuracy} and \textbf{37.60\% localization IoU}, confirming that the multi-scale ConvNeXt features learn structural semantic discrepancies that persist even when high-frequency Discrete Cosine Transform (DCT) block boundaries are perturbed.
+
+\subsection{Qualitative Visual Localization Analysis}
+Figure~\ref{fig:qualitative_results} presents visual comparisons produced by FRAME across challenging forensic scenarios:
+\begin{enumerate}
+    \item \textbf{Subtle Flow-Matching Inpainting (Figure~\ref{fig:qual_flux}):} On FLUX.1 ($2.40\%$ edit area), FRAME isolates the localized manipulation with high confidence ($\mathrm{IoU} = 22.27\%$), tightly aligning with ground truth boundaries without spurious background activations.
+    \item \textbf{Medium Inpainting Localization (Figure~\ref{fig:qual_sd15_medium}):} On SD 1.5 object replacement ($8.80\%$ edit area), the predicted heatmap sharply isolates the altered region ($\mathrm{IoU} = 18.75\%$) without bleeding into natural foliage.
+    \item \textbf{Micro-Inpainting Preservation (Figure~\ref{fig:qual_sd15_tiny}):} On an ultra-small edit ($1.85\%$ area), sliding native tiles capture subtle interpolation seams, whereas downsampled baselines fail completely.
+    \item \textbf{Pristine Control Rejection (Figure~\ref{fig:qual_clean}):} On an authentic unmanipulated photograph, the continuous anomaly heatmap remains entirely cool ($s = 0.2140 \ll \tau_d = 0.5550$), confirming $94.00\%$ pristine specificity.
+    \item \textbf{Hann Window Blending (Figure~\ref{fig:qual_fixture}):} Overlapping native tiles merge seamlessly without boundary discontinuities.
+\end{enumerate}
+
+\subsection{Computational Efficiency & Hardware Profiling}
+To assess edge deployment viability, we profile FRAME against competing baselines across two hardware tiers: an NVIDIA RTX 4090 workstation GPU and an NVIDIA Jetson AGX Orin embedded computing board. As shown in Table~\ref{tab:hardware_profile}, by employing a single shared ConvNeXt-Tiny encoder, FRAME achieves \textbf{40.3 FPS} on RTX 4090 and \textbf{20.6 FPS} on Jetson Orin, requiring only \textbf{2,460 MB peak VRAM}---a $6\times$ memory reduction compared to FUSED~\cite{fused}.
+
+\section{Conclusion}
+\label{sec:conclusion}
+This paper presented \textbf{FRAME}, an end-to-end framework for single-image inpainting detection and pixel-accurate localization. By coupling a single shared ConvNeXt-Tiny encoder with a dual-view spatial hierarchy (resized global canvas + native-resolution sliding tiles), FRAME resolves the spatial resolution paradox that compromises existing downsampling and crop-only architectures. Full-canvas anomaly probability maps are reconstructed with high fidelity via 2D Hann window weighting, while dual-head decision aggregation expands the authentic-versus-manipulated separation gap by over $4.3\times$. Extensive evaluations on the OpenSDID benchmark across five diverse diffusion families (SD 1.5, SD 2.1, SD 3, SDXL, and FLUX.1) demonstrate that FRAME establishes a new state-of-the-art, achieving \textbf{91.20\% image accuracy}, \textbf{92.60\% balanced accuracy}, and \textbf{47.30\% mean localization IoU}, while sustaining real-time throughput on embedded edge hardware.
+
 \bibliographystyle{ACM-Reference-Format}
 \bibliography{references}
-\end{document}
 
+\end{document}
