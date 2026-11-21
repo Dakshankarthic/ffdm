@@ -1,11 +1,11 @@
 {
-  "timestamp": "2026-11-14 20:16:18 IST",
+  "timestamp": "2026-11-21 20:33:26 IST",
   "total_test_images": 100,
   "protocol": "SuperFRAME Dual Ensemble (+TTA) on Official 100-Image Frozen Multi-Generator Benchmark",
   "global_detection_metrics": {
     "accuracy": 70.0,
     "f1_score": 62.5,
-    "auroc": 74.52
+    "auroc": 74.48
   },
   "global_localization_metrics": {
     "mean_iou": 34.89,
@@ -24,7 +24,7 @@
     "sd2": {
       "accuracy": 70.0,
       "f1": 66.67,
-      "auroc": 71.0,
+      "auroc": 70.0,
       "mean_iou": 35.84
     },
     "sd3": {

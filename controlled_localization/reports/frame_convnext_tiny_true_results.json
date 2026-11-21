@@ -1,0 +1,67 @@
+{
+  "timestamp": "2026-11-21 20:28:25 IST",
+  "hardware": {
+    "device": "cuda",
+    "gpu_name": "NVIDIA GeForce RTX 2070 SUPER",
+    "vram_gb": 8.59
+  },
+  "model_architecture": "ConvNeXt-Tiny Shared Single-Backbone (Track B)",
+  "total_parameters": 28120867,
+  "calibrated_threshold_tau_d": 0.43,
+  "mask_threshold_tau_m": 0.35,
+  "total_test_images": 100,
+  "confusion_matrix": {
+    "true_negatives": 46,
+    "false_positives": 4,
+    "false_negatives": 46,
+    "true_positives": 4
+  },
+  "detection_metrics": {
+    "image_accuracy": 50.0,
+    "balanced_accuracy": 50.0,
+    "sensitivity_tpr": 8.0,
+    "specificity_tnr": 92.0,
+    "false_positive_rate": 8.0,
+    "image_f1": 13.79,
+    "auroc": 53.88
+  },
+  "localization_metrics": {
+    "mean_iou": 0.0,
+    "pixel_f1": 0.0,
+    "tiny_edit_iou_lt2pct": 0.0,
+    "medium_edit_iou_2to10pct": 0.0,
+    "large_edit_iou_gt10pct": 0.0
+  },
+  "per_generator_breakdown": {
+    "sd15": {
+      "accuracy": 50.0,
+      "f1_score": 0.0,
+      "auroc": 51.0,
+      "mean_iou": 0.0
+    },
+    "sd2": {
+      "accuracy": 50.0,
+      "f1_score": 16.67,
+      "auroc": 41.0,
+      "mean_iou": 0.0
+    },
+    "sd3": {
+      "accuracy": 50.0,
+      "f1_score": 28.57,
+      "auroc": 58.0,
+      "mean_iou": 0.0
+    },
+    "sdxl": {
+      "accuracy": 50.0,
+      "f1_score": 0.0,
+      "auroc": 53.0,
+      "mean_iou": 0.0
+    },
+    "flux": {
+      "accuracy": 50.0,
+      "f1_score": 16.67,
+      "auroc": 61.0,
+      "mean_iou": 0.0
+    }
+  }
+}
