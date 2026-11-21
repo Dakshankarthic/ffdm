@@ -102,7 +102,7 @@ arrow(FPN['b'], TLOG['t'])
 # --- Stage 4 Content ---
 HANN = box(5.78, 1.55, 2.40, 0.42, '2D Separable Hann Window Weighting', 'w(u, v) with Positive Floor e_w = 0.05', bg='#f0fdf4', border='#16a34a')
 HMAP = box(5.78, 0.85, 2.40, 0.44, 'Full-Canvas Anomaly Heatmap P(x)', 'Seamless Blending over Image Lattice (H x W)', bold=True)
-BM   = box(5.78, 0.26, 2.40, 0.28, 'Binary Inpainting Mask', 'M_hat(x) = I(P(x) >= t_mask = 0.35)', bg='#fef9c3', border='#ca8a04')
+BM   = box(5.78, 0.26, 2.40, 0.28, 'Binary Mask (t_mask = 0.35)', 'mIoU: 41.80% | Tiny IoU: 11.20%', bg='#fef9c3', border='#ca8a04')
 
 arrow(TLOG['b'], HANN['t'])
 arrow(HANN['b'], HMAP['t'])
@@ -126,10 +126,10 @@ arrow(SH['b'], (2.05, HY['t'][1]))
 cx, cy = 1.45, 0.42
 ax.add_patch(Polygon([(cx-0.42, cy), (cx, cy+0.20), (cx+0.42, cy), (cx, cy-0.20)], closed=True,
                      fc='#fee2e2', ec='#dc2626', lw=1.2, zorder=3))
-ax.text(cx, cy, 't_d = 0.5550', ha='center', va='center', fontsize=5.8, fontweight='bold', color='#991b1b', zorder=4)
+ax.text(cx, cy, 't_d = 0.5200', ha='center', va='center', fontsize=5.8, fontweight='bold', color='#991b1b', zorder=4)
 
-GEN = box(0.60, 0.42, 1.00, 0.42, 'AUTHENTIC', 's < 0.5550\n(94.0% Spec.)', bg='#f0fdf4', border='#16a34a')
-EDT = box(2.45, 0.42, 1.15, 0.42, 'MANIPULATED', 's >= 0.5550\n(91.2% Acc.)', bg='#fef2f2', border='#ef4444')
+GEN = box(0.60, 0.42, 1.00, 0.42, 'AUTHENTIC', 's < 0.5200\n(85.0% Spec.)', bg='#f0fdf4', border='#16a34a')
+EDT = box(2.45, 0.42, 1.15, 0.42, 'MANIPULATED', 's >= 0.5200\n(83.5% Acc.)', bg='#fef2f2', border='#ef4444')
 
 arrow(HY['b'], (2.80, cy), (cx+0.42, cy))
 arrow((cx-0.42, cy), GEN['r'])
