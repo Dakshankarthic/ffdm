@@ -1010,3 +1010,31 @@ Scope: Locked single-precision numerical targets establishing SOTA leadership ov
 3. Target Evaluation File Saved:
 - `controlled_localization/reports/target_kaggle_10k_evaluation.json`
 - `controlled_localization/reports/multi_paper_benchmark_comparison.md`
+
+
+ENTRY 13 - CONVNEXT-TINY FRAME PAPER AND EVALUATION PLAN
+Date: 21 November 2026
+Decision: Develop a simpler FRAME variant with one shared ConvNeXt-Tiny backbone. Prepare a separate eight-page manuscript before references. The earlier manuscript remains a separate version.
+
+1. Problem and introductory figure
+- An inpainted photograph and its annotated edit region illustrate the two outputs: an edited/genuine decision and a pixel-level edit mask.
+- The detector receives a single image. The annotation is used for supervision and evaluation.
+
+2. Architecture and training
+- Resize the whole image to 384 x 384. Extract overlapping native-resolution 384 x 384 tiles with a 256-pixel stride and cover the image edges.
+- Both paths share the ImageNet-pretrained ConvNeXt-Tiny encoder. Global average pooling and a linear classifier produce the whole-image score. A lightweight 64-channel feature pyramid decoder produces tile mask logits.
+- Training combines whole-image binary cross-entropy with balanced mask BCE and Dice on edited crops. Empty-mask crops contribute mask BCE. Exclude padding from mask supervision and reconstruction.
+- Merge tile probabilities with Hann weights. Threshold the merged map for localization. Average the top 100 map values for the local score and combine it with the whole-image score. Select fusion and thresholds on validation, then freeze them for testing.
+
+3. Accuracy target and evaluation
+- Target: 83.5% image accuracy, equivalent to 167 correct decisions on a 200-image test. Training and evaluation of this variant are pending.
+- Prior FRAME ensemble development record: 70.00% accuracy, 34.89% mean IoU and 8.94% tiny-edit IoU on 100 images. These figures describe the older ensemble.
+- Group images by original source before splitting. Compare with FUSED, MaskCLIP and DeCLIP on a matched protocol where feasible. Record accuracy, balanced accuracy, edited-class F1, AUROC, genuine false positives, mask IoU and tiny-edit IoU.
+- Compare whole-only, local-only and fused scoring. Test JPEG quality 95, 75 and 50 against the as-supplied images using fixed thresholds and unchanged reference coordinates.
+- Save split manifests, run configuration, checkpoint, thresholds, per-image predictions, masks and evaluation code before reporting measured results.
+
+4. Manuscript status
+- Source: paper_work/FRAME_Tiny_Paper/main.tex
+- Package: paper_work/FRAME_Tiny_Paper.zip
+- LaTeX compilation succeeded. The draft uses eight planned body pages before references. The rendered page count has yet to be independently checked.
+- Pending: implement and train this configuration, run matched comparisons and compression tests, populate the results tables from saved predictions, and verify the final rendered page count.

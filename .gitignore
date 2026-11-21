@@ -43,6 +43,8 @@ controlled_localization/runs/
 *.avi
 *.mov
 !paper_work/manuscript/figures/*
+!paper_work/FRAME_Tiny_Paper/figures/*
+!paper_work/TRACK_A_A_STAR_CONFERENCE_MANUSCRIPT/figures/*
 baseline_work/data/
 controlled_localization/runs/**/data/
 research_data/
