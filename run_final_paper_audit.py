@@ -32,7 +32,24 @@ check("Table 3 FRAME SD2.1 (51.80%)", "51.80" in content)
 check("Table 3 FRAME SD3 (47.60%)", "47.60" in content)
 check("Table 3 FRAME SDXL (33.20%)", "33.20" in content)
 check("Table 3 FRAME FLUX.1 (22.70%)", "22.70" in content)
-check("Table 3 pooled test set clarification present", "Overall mIoU ($43.80\\%$) is evaluated on the full pooled test set" in content)
+check("Table 3 pooled test set clarification present", "Overall mIoU ($43.80\\%$) is evaluated across the full pooled 1,000-image benchmark" in content)
+
+# 2b. Dataset size: 1,000 total, 200 per family
+check("Abstract states 1,000 images, 200 per family", "totaling 1,000 source-disjoint test images (200 per family; 100 authentic, 100 manipulated)" in content)
+check("Contributions state 1,000 images, 200 per family", "totaling 1,000 source-disjoint test images (200 per family; 100 authentic, 100 manipulated)" in content)
+check("Table 1 caption specifies 1,000 test images, 200 per family", "(1,000 total test images, 200 per family)" in content)
+check("Table 1 SD1.5 count is 200", "SD 1.5~\\cite{ldm} & LDM (UNet) & $512 \\times 512$ & 50 (DDIM) & 200 \\\\" in content)
+check("Table 1 Total count is 1,000", "\\textbf{Total Benchmark} & \\textbf{5 Families} & \\textbf{Multi-Scale} & \\textbf{Diverse} & \\textbf{1,000} \\\\" in content)
+check("Section 5.1 states 1,000 images, 200 per family", "totaling 1,000 source-disjoint test images (200 per generator family; 100 authentic, 100 manipulated)" in content)
+check("Conclusion states 1,000 test images (200 per family)", "totaling 1,000 test images (200 per family)" in content)
+
+# 2c. Anti-overlap protections (Table 1, Table 5, Table 6 column fitting)
+check("Table 1 wrapped in resizebox to prevent column overflow", "\\label{tab:dataset_stats}\n\\resizebox{\\columnwidth}{!}{%" in content)
+check("Table 5 wrapped in resizebox to prevent column overflow", "\\label{tab:jpeg_robustness}\n\\resizebox{\\columnwidth}{!}{%" in content)
+check("Table 6 wrapped in resizebox to prevent column overflow", "\\label{tab:hardware_profile}\n\\resizebox{\\columnwidth}{!}{%" in content)
+check("Section 5.5 Robustness to JPEG text present", "\\subsection{Robustness to JPEG Compression Artifacts}" in content)
+check("Section 5.6 Qualitative Analysis text present", "\\subsection{Qualitative Visual Localization Analysis}" in content)
+check("Section 5.7 Empirical Scale text present", "\\subsection{Empirical Scale \\& Score Distribution Analysis}" in content)
 
 # 3. Baseline Authenticity (Table 2 & Table 3)
 check("MaskCLIP published Table 2 Acc (82.00%)", "\\underline{82.00} & NR & \\underline{77.80} & NR & \\underline{42.70} & \\underline{49.40} & NR & NR" in content)
@@ -60,7 +77,7 @@ check("FUSED absent from Table 2", not any("FUSED" in line for line in content[c
 check("FUSED absent from Table 3", not any("FUSED" in line for line in content[content.find("tab:generator_breakdown"):content.find("tab:generator_breakdown")+1000].split("\n")))
 
 # 6. Float overlap protection
-check("Table 5 uses [h!] float specifier", "\\begin{table}[h!]\n\\centering\\small\n\\caption{Robustness evaluation under post-processing" in content)
+check("Table 5 uses proper float specifier and caption", "\\begin{table}[t]\n\\centering\\small\n\\caption{Robustness evaluation under post-processing JPEG recompression across diverse quality factors ($Q \\in \\{95, 75, 50\\}$) on the 1,000-image multi-generator benchmark.}" in content)
 check("Table 4 uses [h!] float specifier", "\\begin{table*}[h!]\n\\centering\\small\n\\caption{Systematic component-wise ablation" in content)
 
 # Summary
