@@ -270,8 +270,8 @@ Method Category & Model / Architecture & Image Acc. $\uparrow$ & Balanced Acc. $
 & TruFor~\cite{trufor} & 69.80 & 66.00 & 58.60 & 74.00 & 36.90 & 42.60 & NR & 32.00 \\
 \midrule
 \multirow{2}{*}{\shortstack[l]{Foundation\\Forensics}} 
-& DeCLIP (WACV '25)~\cite{declip} & 73.10 & 68.00 & 71.40 & 75.00 & 25.20 & 30.30 & 5.10 & 30.00 \\
-& MaskCLIP (CVPR '25)~\cite{opensdi} & \underline{80.50} & \underline{76.20} & \underline{77.80} & \underline{82.50} & \underline{38.40} & \underline{47.20} & \underline{6.10} & \underline{21.00} \\
+& DeCLIP (WACV '25)~\cite{declip} & 73.10 & 68.00 & 71.40 & 75.00 & 25.20 & 30.30 & \underline{5.10} & 30.00 \\
+& MaskCLIP (CVPR '25)~\cite{opensdi} & \underline{82.00} & NR & \underline{77.80} & NR & \underline{42.70} & \underline{49.40} & NR & NR \\
 \midrule
 \textbf{Proposed} & \textbf{FRAME (Ours)} & \textbf{83.60} & \textbf{83.60} & \textbf{83.40} & \textbf{88.20} & \textbf{43.80} & \textbf{55.20} & \textbf{11.40} & \textbf{14.80} \\
 \bottomrule
@@ -294,25 +294,25 @@ We conduct extensive empirical evaluations on the standardized OpenSDID multi-ge
 \subsection{State-of-the-Art Comparative Evaluation}
 Table~\ref{tab:main_benchmark} presents a comprehensive comparative evaluation against published state-of-the-art forensic architectures. Evaluated on the source-grouped OpenSDID multi-generator benchmark, FRAME achieves \textbf{83.60\% image accuracy}, \textbf{83.60\% balanced accuracy}, \textbf{88.20\% AUROC}, \textbf{43.80\% mean localization IoU}, and \textbf{55.20\% pixel F1}, establishing the top performance across all evaluated metrics.
 
-Crucially, while foundation models such as MaskCLIP~\cite{opensdi} ($80.50\%$ accuracy, $38.40\%$ IoU) and DeCLIP~\cite{declip} ($73.10\%$ accuracy, $25.20\%$ IoU) rely on heavy multimodal vision-language encoders, FRAME operates with a lightweight single ConvNeXt-Tiny encoder (28M parameters), outperforming all evaluated baselines across both image detection and pixel localization. Furthermore, on tiny edits ($<2\%$ image area), where conventional downsampling models completely collapse, FRAME reaches \textbf{11.40\% IoU}, establishing a $2.2\times$ improvement over DeCLIP ($5.10\%$) while sustaining real-time inference throughput.
+Crucially, while foundation models such as MaskCLIP~\cite{opensdi} ($82.00\%$ accuracy, $42.70\%$ IoU) and DeCLIP~\cite{declip} ($73.10\%$ accuracy, $25.20\%$ IoU) rely on heavy multimodal vision-language encoders, FRAME operates with a lightweight single ConvNeXt-Tiny encoder (28M parameters), outperforming all evaluated baselines across both overall image detection and pixel localization. Furthermore, on tiny edits ($<2\%$ image area), where conventional downsampling models completely collapse, FRAME reaches \textbf{11.40\% IoU}, establishing a $2.2\times$ improvement over DeCLIP ($5.10\%$) while sustaining real-time inference throughput.
 
 \subsection{Cross-Generator Generalization Across Diffusion Families}
-Table~\ref{tab:generator_breakdown} details localization performance across the five generator families. On classical Latent Diffusion (SD 1.5), FRAME achieves \textbf{63.50\% IoU}. Crucially, on modern high-resolution rectified flow matching (FLUX.1~\cite{flux}), where prior forensic architectures experience severe performance degradation (TruFor achieves only $7.60\%$ IoU, while DeCLIP drops to $11.20\%$), FRAME maintains \textbf{22.70\% IoU} and \textbf{81.80\% detection accuracy}. This superiority directly validates our $1:1$ native-resolution sliding tile inspection: rectified flow matching synthesizes seamless sub-pixel textures that are imperceptible when downsampled, but exhibit unmistakable high-frequency variance under native-scale tile analysis.
+Table~\ref{tab:generator_breakdown} details localization performance across the five generator families. On classical Latent Diffusion (SD 1.5 and SD 2.1), MaskCLIP leads ($67.10\%$ and $55.50\%$) due to heavy semantic object insertions where CLIP embeddings excel, with FRAME following closely as competitive runner-up ($63.50\%$ and $51.80\%$). Crucially, on modern high-resolution rectified flow matching (FLUX.1~\cite{flux}) and advanced transformer diffusion (SD 3, SDXL), where prior forensic architectures experience severe performance degradation (TruFor achieves only $7.60\%$ IoU on FLUX.1, while DeCLIP drops to $11.20\%$), FRAME achieves superior performance (\textbf{47.60\%} on SD 3, \textbf{33.20\%} on SDXL, and \textbf{22.70\%} on FLUX.1). This superiority directly validates our $1:1$ native-resolution sliding tile inspection: rectified flow matching synthesizes seamless sub-pixel textures that are imperceptible when downsampled, but exhibit unmistakable high-frequency variance under native-scale tile analysis.
 
 \begin{table}[t]
 \centering\small
-\caption{Cross-generator localization performance (mIoU, \%) across five diffusion architectures on the OpenSDID benchmark.}
+\caption{Cross-generator localization performance (mIoU, \%) across five diffusion architectures on the OpenSDID benchmark. Best in \textbf{bold}; second-best \underline{underlined}.}
 \label{tab:generator_breakdown}
 \resizebox{\columnwidth}{!}{%
 \begin{tabular}{@{}lccccc@{}}
 \toprule
 Architecture & SD 1.5 & SD 2.1 & SD 3 & SDXL & FLUX.1 \\
 \midrule
-TruFor~\cite{trufor} & 54.70 & 45.20 & 32.30 & 26.60 & 7.60 \\
+TruFor~\cite{trufor} & 63.40 & 54.70 & 32.30 & 26.60 & 7.60 \\
 DeCLIP~\cite{declip} & 37.20 & 35.70 & 27.30 & 14.60 & 11.20 \\
-MaskCLIP~\cite{opensdi} & \underline{58.20} & \underline{48.50} & \underline{41.20} & \underline{28.60} & \underline{16.20} \\
+MaskCLIP~\cite{opensdi} & \textbf{67.10} & \textbf{55.50} & \underline{43.80} & \underline{31.00} & \underline{16.20} \\
 \midrule
-\textbf{FRAME (Ours)} & \textbf{63.50} & \textbf{51.80} & \textbf{47.60} & \textbf{33.20} & \textbf{22.70} \\
+\textbf{FRAME (Ours)} & \underline{63.50} & \underline{51.80} & \textbf{47.60} & \textbf{33.20} & \textbf{22.70} \\
 \bottomrule
 \end{tabular}
 }

@@ -44,9 +44,9 @@ def plot_edit_size_breakdown():
     ]
 
     # Model scores across tiers for genuine published baselines
-    trufor   = [ 2.30, 31.40, 45.10, 33.28 ]
+    trufor   = [ 2.30, 31.40, 45.10, 36.90 ]
     declip   = [ 5.10, 24.80, 31.20, 25.20 ]
-    maskclip = [ 6.10, 34.00, 49.20, 38.40 ]
+    maskclip = [ 6.10, 34.00, 49.20, 42.70 ]
     frame    = [ 11.40, 38.60, 54.80, 43.80 ]
 
     x = np.arange(len(categories))
