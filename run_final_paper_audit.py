@@ -80,6 +80,12 @@ check("FUSED absent from Table 3", not any("FUSED" in line for line in content[c
 check("Table 5 uses proper float specifier and caption", "\\begin{table}[t]\n\\centering\\small\n\\caption{Robustness evaluation under post-processing JPEG recompression across diverse quality factors ($Q \\in \\{95, 75, 50\\}$) on the 1,000-image multi-generator benchmark.}" in content)
 check("Table 4 uses [h!] float specifier", "\\begin{table*}[h!]\n\\centering\\small\n\\caption{Systematic component-wise ablation" in content)
 
+# 7. Figure 3(c) Quiescent Control Panel Integrity
+fig3c_path = Path("I:/icvgip workshop/paper_work/FRAME_Tiny_Paper/figures/clean_unmanipulated_real_comparison.png")
+check("Figure 3(c) clean control image exists", fig3c_path.exists())
+check("Figure 3(c) caption in main.tex matches $s = 0.2820 << \\tau_d = 0.5200$", "Pristine, unmanipulated real control photograph ($s = 0.2820 \\ll \\tau_d = 0.5200$)" in content)
+check("Figure 3(c) caption claims zero false alarms", "confirming $85.20\\%$ pristine specificity and zero false alarms." in content)
+
 # Summary
 passed = sum(1 for s, _, _ in checks if s == "PASS")
 failed = sum(1 for s, _, _ in checks if s == "FAIL")
